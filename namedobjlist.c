@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: namedobjlist.c,v 1.3 2001/05/20 14:51:33 iedowse Exp $
+ * $Id: namedobjlist.c,v 1.4 2003/10/30 17:14:57 iedowse Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,8 +41,10 @@ nol_hash(Namedobjlist *self, const void *vstr, int strlen) {
 	const unsigned char *str = vstr;
 	const unsigned char *send = str + strlen;
 
-	while (str < send)
-		hash += (*str + 1) << ((hash^*str++) & 15);
+	while (str < send) {
+		hash += (*str + 1) << ((hash^*str) & 15);
+		str++;
+	}
 
 	return hash & ((1<<self->log2hashsize) - 1);
 }

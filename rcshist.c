@@ -22,17 +22,19 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: rcshist.c,v 1.10 2002/02/27 17:57:17 iedowse Exp $
+ * $Id: rcshist.c,v 1.11 2003/10/30 17:14:57 iedowse Exp $
  */
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "namedobjlist.h"
 #include "rcsfile.h"
 #include "misc.h"
 
+void filelist_expand(char ***filelistp, int *nfilesp);
 void prrev(struct revnode *revp);
 void prlist(char *prefix, struct textlist *tlp);
 void prlog(struct revnode *revp);
@@ -59,10 +61,11 @@ main(int argc, char **argv) {
 	char *revname = NULL;
 	char **filelist;
 	struct revnode **rlist, **rltmp;
-	int rnum, rlist_len;
+	int Rflag, rnum, rlist_len;
 
 	progname = argv[0];
-	while ((ch = getopt(argc, argv, "L:mr:")) != -1) {
+	Rflag = 0;
+	while ((ch = getopt(argc, argv, "L:mr:R")) != -1) {
 		switch (ch) {
 		case 'L':
 			revname = optarg;
@@ -72,6 +75,9 @@ main(int argc, char **argv) {
 			break;
 		case 'r':
 			branch = optarg;
+			break;
+		case 'R':
+			Rflag = 1;
 			break;
 		case '?':
 		default:
@@ -91,6 +97,9 @@ main(int argc, char **argv) {
 		onerev(filelist[0], revname);
 		exit(0);
 	}
+
+	if (Rflag)
+		filelist_expand(&filelist, &nfiles);
 
 	rlist = NULL;
 	rnum = 0;
@@ -219,3 +228,8 @@ prlog(struct revnode *revp) {
 	textlist_destroy(tlp);
 }
 
+void
+filelist_expand(char ***filelistp, int *nfilesp)
+{
+	/* Implement me. */
+}

@@ -1,3 +1,9 @@
+2003-10-30  iedowse
+
+	* namedobjlist.c, rcshist.c: rcshist 1.01
+
+	* Makefile, rcsfile.c: rcshist-1.01
+
 2002-02-27  iedowse
 
 	* Makefile, misc.c, bsd_queue.h, rcshist.1, rcshist.c, rcsfile.c:

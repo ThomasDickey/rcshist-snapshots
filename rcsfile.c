@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: rcsfile.c,v 1.12 2002/02/27 17:55:30 iedowse Exp $
+ * $Id: rcsfile.c,v 1.15 2003/10/30 17:08:43 iedowse Exp $
  */
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -96,7 +96,8 @@ rcsfile_open(const char *filename) {
 		return NULL;
 	}
 		
-	if ((map = mmap(NULL, sb.st_size, PROT_READ, 0, fd, 0)) == NULL) {
+	if ((map = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) ==
+	    MAP_FAILED) {
 		warn("%s: mmap", filename);
 		close(fd);
 		return NULL;
@@ -343,6 +344,13 @@ get_admin(struct parser *pp, struct rcsfile *rcsp) {
 				    symbol.len, symbol.start,
 				    tok.value.len, tok.value.start);
 #endif
+
+				if (namedobjlist_lookup(rcsp->symbols,
+				    symbol.start, symbol.len) != NULL) {
+					warnx("Duplicate symbol '%.*s'",
+					    symbol.len, symbol.start);
+					continue;
+				}
 
 				nump = malloc(sizeof(*nump));
 				numinit(nump);
@@ -892,6 +900,7 @@ reversepatch(struct rcspatch *pp) {
 			opp->op = RPOP_DEL;
 			break;
 		default:
+			break;
 		}
 		l = opp->nline;
 		opp->nline = opp->line;
@@ -1099,7 +1108,7 @@ expect_tok(struct parser *pp, struct token *tokp, int type) {
 void
 puttok(struct parser *pp, struct token *tokp) {
 	if (pp->saved.type != TOKTYPE_NONE)
-		abort;
+		abort();
 	pp->saved = *tokp;
 }
 
@@ -1191,6 +1200,13 @@ int
 revbydate(const void *v1, const void *v2) {
 	struct revnode *revp1 = *(struct revnode **)v1;
 	struct revnode *revp2 = *(struct revnode **)v2;
+	int ret;
 
-	return -numcmp(&revp1->date, &revp2->date);
+	ret = -numcmp(&revp1->date, &revp2->date);
+	if (ret != 0)
+		return 0;
+	ret = strcmp(revp1->rcsp->filename, revp2->rcsp->filename);
+	if (ret != 0)
+		return (ret < 0) ? -1 : 1;
+	return 0;
 }
