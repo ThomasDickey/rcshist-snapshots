@@ -3,7 +3,7 @@ TARGET=		rcshist
 OBJECTS= 	rcshist.o namedobjlist.o rcsfile.o misc.o strbuf.o
 CFLAGS+=	-Wall -g -O2
 
-VERS=		1.03
+VERS=		1.04
 DISTFILES=	Makefile bsd_queue.h misc.c misc.h namedobjlist.c \
 		namedobjlist.h rcsfile.c rcsfile.h rcshist.c strbuf.c \
 		strbuf.h rcshist.1
