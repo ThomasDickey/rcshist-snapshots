@@ -1,0 +1,131 @@
+.\"
+.\" Copyright (c) 2001 Ian Dowse <iedowse@maths.tcd.ie>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer
+.\"    in this position and unchanged.
+.\" 2. The name of the author may not be used to endorse or promote products
+.\"    derived from this software withough specific prior written permission
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" $Id: rcshist.1,v 1.1 2002/02/27 17:58:41 iedowse Exp $
+.\"
+.Dd May 16, 2001
+.Dt RCSHIST 1
+.Os
+.Sh NAME
+.Nm rcshist
+.Nd display RCS change history
+.Sh SYNOPSIS
+.Nm
+.Op Fl m
+.Op Fl r Ar branch|MAIN|ALL
+.Ar
+.Nm
+.Ar -L revision rcsfile
+.Sh DESCRIPTION
+The
+.Nm
+utility displays the complete revision history of a set of RCS files
+including log messages and patches.
+The output is sorted in reverse date order over all revisions of all
+files.
+.Pp
+The second form displays the patch associated with a particular
+revision of an RCS file.
+In this case, the revision must be specified numerically and
+.Ar rcsfile
+must be an RCS
+.Li ,v
+file.
+.Pp
+The options are as follows:
+.Bl -tag -width Fl
+.It Fl m
+Reduce memory usage by retaining only a small fraction of revisions in
+memory.
+Normally,
+.Nm
+will cache all revisions of all files, since this reduces computation
+time significantly.
+For very large file sets, this behaviour can cause excessive memory
+usage.
+.It Fl r Ar branch|MAIN|ALL
+Restrict output to revisions on the specified symbolic branch tag.
+Two special branch names are supported:
+.Bl -tag -width 8n
+.It MAIN
+Only revisions on the main trunk branch are displayed.
+.It ALL
+All revisions are displayed regardless of their branch.
+This is the default if
+.Nm
+cannot infer a branch tag from a CVS/Tag file.
+.El
+.El
+.Pp
+Each
+.Ar file
+listed on the command line specifies an RCS file to be examined.
+The filename is interpreted as follows:
+.Pp
+If the file has a
+.Li ,v
+suffix,
+.Nm
+considers it as an RCS format file and opens it directly. 
+.Pp
+If the file has no
+.Li ,v
+suffix,
+.Nm
+searches for a CVS directory in the same directory as the file.
+If this exists,
+.Nm
+attempts to find the RCS file based on the contents of the
+CVS/Root and CVS/Repository files.
+If a CVS/Tag file exists, and if no branch tag has been specified
+on the command-line or inferred from elsewhere, then
+.Nm
+uses the branch tag from CVS/Tag as the default branch to
+display.
+.Pp
+Finally, the file has no
+.Li ,v
+suffix and no CVS directory was found,
+.Nm
+searches for an RCS directory in the same directory as the file.
+If this exists,
+.Nm
+will look for an RCS
+.Li ,v
+file corresponding to the specified file.
+.Pp
+If
+.Nm
+fails to locate an RCS file corresponding to a specified command-line
+filename,
+.Nm
+will simply print a warning message and continue.
+.Sh SEE ALSO
+.Xr cvs 1 ,
+.Xr rcs 1 ,
+.Xr rlog 1 ,
+.Xr rcsdiff 1 ,
+.Xr rcsfile 5 ,
+.Sh AUTHORS
+.An Ian Dowse Aq iedowse@FreeBSD.org
