@@ -1,3 +1,11 @@
+2004-05-30  iedowse
+
+	* Makefile, strbuf.c: rcshist-1.02
+
+2003-11-29  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* install-sh: RCS_BASE
+
 2003-10-30  iedowse
 
 	* namedobjlist.c, rcshist.c: rcshist 1.01
