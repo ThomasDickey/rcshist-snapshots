@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: strbuf.c,v 1.2 2001/05/20 14:51:33 iedowse Exp $
+ * $Id: strbuf.c,v 1.3 2004/05/30 11:21:40 iedowse Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -218,7 +218,7 @@ int sb_vprintf(Strbuf *buf, const char *fmt, va_list args) {
 /* #define PRINTF_CHECKUP */
 int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 
-	va_list ap = args;
+	va_list ap;
 #ifdef PRINTF_CHECKUP
 	char *oldfmt = fmt;
 #endif
@@ -237,6 +237,7 @@ int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 
 	tmpbuf[FBUF_LEN] = '\0';
 
+	va_copy(ap, args);
 	if (fmt == NULL) {
 		fprintf(stderr, "sb_vappendf: NULL format arg!\n");
 		abort();
