@@ -1,0 +1,14 @@
+2002-02-27  iedowse
+
+	* Makefile, misc.c, bsd_queue.h, rcshist.1, rcshist.c, rcsfile.c:
+	rcshist-1.0
+
+2001-05-20  iedowse
+
+	* misc.h, namedobjlist.c, namedobjlist.h, rcsfile.h, strbuf.c, strbuf.h:
+	rcshist-1.0
+
+1994-07-11  Thomas E. Dickey  <dickey@clark.net>
+
+	* config_h.in: RCS_BASE
+
