@@ -22,9 +22,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: rcshist.c,v 1.11 2003/10/30 17:14:57 iedowse Exp $
+ * $Id: rcshist.c,v 1.12 2005/02/08 00:27:47 iedowse Exp $
  */
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <err.h>
+#include <fts.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +38,7 @@
 #include "misc.h"
 
 void filelist_expand(char ***filelistp, int *nfilesp);
+int filelist_ftscmp(const FTSENT * const *fe1, const FTSENT * const *fe2);
 void prrev(struct revnode *revp);
 void prlist(char *prefix, struct textlist *tlp);
 void prlog(struct revnode *revp);
@@ -47,7 +51,7 @@ int mflag;
 void
 usage() {
 	fprintf(stderr,
-	    "Usage: %s [-m] [-r<branch|MAIN|ALL>] <filename> ...\n"
+	    "Usage: %s [-mR] [-r<branch|MAIN|ALL>] <filename> ...\n"
 	    "       %s -L<revision> <filename>\n",
 	    progname, progname);
 	exit(1);
@@ -231,5 +235,55 @@ prlog(struct revnode *revp) {
 void
 filelist_expand(char ***filelistp, int *nfilesp)
 {
-	/* Implement me. */
+	FTS *fts;
+	FTSENT *fe;
+	char **newlist;
+	int newlist_arraysize, nfiles;
+
+	fts = fts_open(*filelistp, FTS_PHYSICAL, filelist_ftscmp);
+	if (fts == NULL)
+		err(1, "ftsopen");
+
+	newlist = malloc(sizeof(*newlist));
+	if (newlist == NULL)
+		err(1, "realloc");
+	newlist_arraysize = 1;
+	nfiles = 0;
+	while ((fe = fts_read(fts)) != NULL) {
+		switch (fe->fts_info) {
+		case FTS_DNR:
+		case FTS_ERR:
+		case FTS_NS:
+			warnx("%s: %s", fe->fts_path, strerror(fe->fts_errno));
+			continue;
+		case FTS_F:
+			break;
+		default:
+			continue;
+		}
+
+		if (nfiles + 1 == newlist_arraysize) {
+			newlist_arraysize += newlist_arraysize + 1;
+			newlist = realloc(newlist, newlist_arraysize *
+			    sizeof(*newlist));
+			if (newlist == NULL)
+				err(1, "realloc");
+		}
+		newlist[nfiles] = strdup(fe->fts_path);
+		if (newlist[nfiles] == NULL)
+			err(1, "strdup");
+		nfiles++;
+	}
+	if (fts_close(fts) != 0)
+		err(1, "fts_close");
+
+	newlist[nfiles] = NULL;
+	*filelistp = newlist;
+	*nfilesp = nfiles;
+}
+
+int
+filelist_ftscmp(const FTSENT * const *fe1, const FTSENT * const *fe2)
+{
+	return (strcoll((*fe1)->fts_name, (*fe2)->fts_name));
 }

@@ -22,9 +22,9 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $Id: rcshist.1,v 1.1 2002/02/27 17:58:41 iedowse Exp $
+.\" $Id: rcshist.1,v 1.2 2005/02/08 00:27:01 iedowse Exp $
 .\"
-.Dd May 16, 2001
+.Dd February 8, 2005
 .Dt RCSHIST 1
 .Os
 .Sh NAME
@@ -32,7 +32,7 @@
 .Nd display RCS change history
 .Sh SYNOPSIS
 .Nm
-.Op Fl m
+.Op Fl mR
 .Op Fl r Ar branch|MAIN|ALL
 .Ar
 .Nm
@@ -64,6 +64,8 @@ will cache all revisions of all files, since this reduces computation
 time significantly.
 For very large file sets, this behaviour can cause excessive memory
 usage.
+.It Fl R
+Recursively search all paths specified for files to analyse.
 .It Fl r Ar branch|MAIN|ALL
 Restrict output to revisions on the specified symbolic branch tag.
 Two special branch names are supported:

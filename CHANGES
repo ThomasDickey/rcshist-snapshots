@@ -1,3 +1,7 @@
+2005-02-07  iedowse
+
+	* Makefile, rcshist.c, rcshist.1: rcshist-1.04
+
 2004-09-03  iedowse
 
 	* Makefile, rcsfile.c: rcshist-1.03
