@@ -1,0 +1,15 @@
+Source: rcshist
+Maintainer: Dave Beckett <dajobe@debian.org>
+Section: devel
+Priority: extra
+Standards-Version: 3.8.4
+Build-Depends: debhelper (>= 5)
+Homepage: http://invisible-island.net/rcshist/
+
+Package: rcshist
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: public domain Berkeley LALR Yacc parser generator
+ The rcshist utility displays the complete revision history of a set of
+ RCS files including log messages and patches.  The output is sorted in
+ reverse date order over all revisions of all files.
