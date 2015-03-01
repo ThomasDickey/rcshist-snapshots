@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: rcsfile.h,v 1.5 2001/05/20 14:51:33 iedowse Exp $
+ * $Id: rcsfile.h,v 1.6 2015/03/01 15:35:08 tom Exp $
  */
 #ifndef RCSFILE_H
 #define RCSFILE_H
@@ -71,6 +71,7 @@ struct rcsfile {
 	struct rcstext headrev;
 	struct rcstext branch;
 	struct rcstext comment;
+	struct rcstext commitid;
 	struct rcstext expand;
 	struct rcstext desc;
 
@@ -121,6 +122,7 @@ struct parser {
 #define ID_NEXT		14
 #define ID_LOG		15
 #define ID_TEXT		16
+#define ID_COMMITID	17
 
 struct rcspatch_op {
 	enum {RPOP_COPY, RPOP_DEL, RPOP_ADD} op;

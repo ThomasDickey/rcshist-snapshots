@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: rcsfile.c,v 1.16 2004/09/04 02:30:02 iedowse Exp $
+ * $Id: rcsfile.c,v 1.19 2015/03/01 17:04:50 tom Exp $
  */
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -42,7 +42,7 @@ static void get_deltas(struct parser *pp, struct rcsfile *rcsp);
 static void get_desc(struct parser *pp, struct rcsfile *rcsp);
 static void get_deltatexts(struct parser *pp, struct rcsfile *rcsp);
 static void fixup_deltas(struct rcsfile *rcsp);
-static void patch_printop(struct rcspatch_op *opp, char *prefix);
+static void patch_printop(struct rcspatch_op *opp, const char *prefix);
 static void reversepatch(struct rcspatch *pp);
 static struct rcspatch *makepatch(struct revnode *revp);
 static struct rcspatch *patch_create(void);
@@ -55,9 +55,9 @@ static void expect_tok(struct parser *pp, struct token *tokp, int type);
 static void puttok(struct parser *pp, struct token *tokp);
 static int gettok(struct parser *pp, struct token *tokp); 
 
-char *tokname[] = {"NONE", "NUM", "ID", "STRING", "COLON", "SEMI"};
+static const char *tokname[] = {"NONE", "NUM", "ID", "STRING", "COLON", "SEMI"};
 
-struct rcstext
+static struct rcstext
 	id_desc =	{"desc",	4},
 	id_head =	{"head",	4},
 	id_branch =	{"branch",	6},
@@ -72,6 +72,7 @@ struct rcstext
 	id_state =	{"state",	5},
 	id_branches =	{"branches",	8},
 	id_next =	{"next",	4},
+	id_commitid =	{"commitid",	8},
 	id_log =	{"log",		3},
 	id_text =	{"text",	4};
 
@@ -96,7 +97,7 @@ rcsfile_open(const char *filename) {
 		return NULL;
 	}
 		
-	if ((map = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) ==
+	if ((map = mmap(NULL, (size_t)sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) ==
 	    MAP_FAILED) {
 		warn("%s: mmap", filename);
 		close(fd);
@@ -111,12 +112,12 @@ rcsfile_open(const char *filename) {
 
 	rcsp = calloc(1, sizeof(*rcsp));
 	rcsp->mapstart = map;
-	rcsp->maplen = sb.st_size;
+	rcsp->maplen = (int)sb.st_size;
 	rcsp->filename = strdup(filename);
 
 	p = strrchr(rcsp->filename, '/');
 	rcsp->shortfname.start = (p == NULL) ? rcsp->filename : p + 1;
-	rcsp->shortfname.len = strlen(rcsp->shortfname.start);
+	rcsp->shortfname.len = (int)strlen(rcsp->shortfname.start);
 	if (rcsp->shortfname.len > 2 && bcmp(",v", rcsp->shortfname.start +
 	    rcsp->shortfname.len - 2, 2) == 0)
 		rcsp->shortfname.len -= 2;
@@ -147,7 +148,7 @@ rcsfile_free(struct rcsfile *rcsp) {
 	struct revnode *revp;
 	struct rcsnum *nump;
 	struct textlist *tlp;
-	void *name;
+	const void *name;
 	int namelen;
 
 	iter = nol_iter_create(rcsp->revs);
@@ -206,7 +207,7 @@ rcsfile_free(struct rcsfile *rcsp) {
 	namedobjlist_destroy(rcsp->revs);
 	namedobjlist_destroy(rcsp->revsbynum);
 
-	if (munmap(rcsp->mapstart, rcsp->maplen) != 0)
+	if (munmap(rcsp->mapstart, (size_t)rcsp->maplen) != 0)
 		warn("rcsfile_free: munmap");
 	free(rcsp->filename);
 
@@ -219,17 +220,17 @@ rcsfile_free(struct rcsfile *rcsp) {
  */
 struct rcsfile *
 rcsfile_smartopen(const char *filename, char **branchp) {
-	Strbuf *basename, *dirname, *rcsdir, *ftmp, *buf;
+	Strbuf *base_name, *dirname, *rcsdir, *ftmp, *buf;
 	int len, dlen;
 	FILE *fp;
 	char *p;
 	struct rcsfile *rcsp;
 
-	len = strlen(filename);
+	len = (int)strlen(filename);
 	if (len > 2 && strcmp(filename + len - 2, ",v") == 0)
 		return rcsfile_open(filename);
 
-	basename = sb_create();
+	base_name = sb_create();
 	dirname = sb_create();
 	rcsdir = sb_create();
 	ftmp = sb_create();
@@ -237,13 +238,13 @@ rcsfile_smartopen(const char *filename, char **branchp) {
 
 	sb_printf(dirname, "%s", filename);
 	if ((p = strrchr(sb_ptr(dirname), '/')) != NULL) {
-		dlen = p - sb_ptr(dirname) + 1;
+		dlen = (int)(p - sb_ptr(dirname) + 1);
 		sb_truncate(dirname, dlen);
-		sb_printf(basename, "%s", filename + dlen);
+		sb_printf(base_name, "%s", filename + dlen);
 	} else {
 		dlen = 0;
 		sb_reset(dirname);
-		sb_printf(basename, "%s", filename);
+		sb_printf(base_name, "%s", filename);
 	}
 
 	sb_printf(ftmp, "%sCVS/Root", sb_ptr(dirname));
@@ -273,28 +274,28 @@ rcsfile_smartopen(const char *filename, char **branchp) {
 				*branchp = strdup(sb_ptr(buf) + 1);
 			fclose(fp);
 		} else if (branchp != NULL && *branchp == NULL)
-			*branchp = "MAIN";
+			*branchp = strdup("MAIN");
 	} else
 		sb_printf(rcsdir, "%sRCS/", sb_ptr(dirname));
 
-	sb_printf(ftmp, "%s%s,v", sb_ptr(rcsdir), sb_ptr(basename));
+	sb_printf(ftmp, "%s%s,v", sb_ptr(rcsdir), sb_ptr(base_name));
 	if ((fp = fopen(sb_ptr(ftmp), "r")) != NULL)
 		fclose(fp);
 	else {
 		sb_printf(ftmp, "%sAttic/%s,v", sb_ptr(rcsdir),
-		    sb_ptr(basename));
+		    sb_ptr(base_name));
 		if ((fp = fopen(sb_ptr(ftmp), "r")) != NULL)
 			fclose(fp);
 		else {
 			/* Revert to the main name for the error message. */
 			sb_printf(ftmp, "%s%s,v", sb_ptr(rcsdir),
-			    sb_ptr(basename));
+			    sb_ptr(base_name));
 		}
 	}
 
 	rcsp = rcsfile_open(sb_ptr(ftmp));
 
-	sb_free(basename);
+	sb_free(base_name);
 	sb_free(dirname);
 	sb_free(rcsdir);
 	sb_free(ftmp);
@@ -376,6 +377,10 @@ get_admin(struct parser *pp, struct rcsfile *rcsp) {
 			if (optional_tok(pp, &tok, TOKTYPE_STRING))
 				rcsp->comment = tok.value;
 			break;
+		case ID_COMMITID:
+			if (optional_tok(pp, &tok, TOKTYPE_ID))
+				rcsp->commitid = tok.value;
+			break;
 		case ID_EXPAND:
 			if (optional_tok(pp, &tok, TOKTYPE_STRING))
 				rcsp->expand = tok.value;
@@ -456,6 +461,10 @@ get_deltas(struct parser *pp, struct rcsfile *rcsp) {
 			case ID_NEXT:
 				if (optional_tok(pp, &tok, TOKTYPE_NUM))
 					revp->patchnextrev = tok.value;
+				break;
+			case ID_COMMITID:
+				if (optional_tok(pp, &tok, TOKTYPE_ID))
+					rcsp->commitid = tok.value;
 				break;
 			default:
 				printf("delta unknown: '%.*s'", tok.value.len,
@@ -592,7 +601,7 @@ fixup_deltas(struct rcsfile *rcsp) {
 		    rcsp->headrev.start);
 
 	iter = nol_iter_create(rcsp->symbols);
-	while ((nump = nol_iter_next(iter, (void **)&symb.start,
+	while ((nump = nol_iter_next(iter, (const void **)&symb.start,
 	    &symb.len)) != NULL) {
 		struct rcsnum num;
 		struct rcstext *textp;
@@ -638,7 +647,7 @@ fixup_deltas(struct rcsfile *rcsp) {
 			numinit(&brnum);
 			text2num(textp, &brnum);
 			if (brnum.len == num.len +1 && bcmp(brnum.num,
-			    num.num, RCSNUM_BYTES(&num)) == 0) {
+			    num.num, (size_t)RCSNUM_BYTES(&num)) == 0) {
 				numfree(&brnum);
 				found = 1;
 				break;
@@ -672,7 +681,7 @@ revlist(struct rcsfile *rcsp, char *branch) {
 	struct revnode **list, *revp;
 	int i = 0;
 
-	list = calloc(rcsp->nrevs + 1, sizeof(*list));
+	list = calloc((size_t)rcsp->nrevs + 1, sizeof(*list));
 
 	if (branch == NULL || strcmp(branch, "ALL") == 0) {
 		Namedobjlist_iter *iter;
@@ -682,7 +691,7 @@ revlist(struct rcsfile *rcsp, char *branch) {
 			list[i++] = revp;
 		nol_iter_destroy(iter);
 
-		qsort(list, rcsp->nrevs, sizeof(*list), revbydate);
+		qsort(list, (size_t)rcsp->nrevs, sizeof(*list), revbydate);
 		return list;
 	}
 
@@ -690,7 +699,7 @@ revlist(struct rcsfile *rcsp, char *branch) {
 		revp = rcsp->head;
 	else {
 		revp = namedobjlist_lookup(rcsp->branchhead, branch,
-		    strlen(branch));
+		    (int)strlen(branch));
 		if (revp == NULL) {
 			free(list);
 			return NULL;
@@ -858,14 +867,14 @@ rev_remref(struct revnode *revp) {
 	 * proportion (1/16) of texts so that future lookups
 	 * won't have to go right back to the start.
 	 */
-	if ((((int)revp * 17702227) & 0xf00) == 0)
+	if ((((long)revp * 17702227) & 0xf00) == 0)
 		return;
 	textlist_destroy(revp->outputlines);
 	revp->outputlines = NULL;
 }
 
 static void
-patch_printop(struct rcspatch_op *opp, char *prefix) {
+patch_printop(struct rcspatch_op *opp, const char *prefix) {
 	int i;
 
 	for (i = 0; i < opp->len; i++) {
@@ -930,13 +939,14 @@ makepatch(struct revnode *revp) {
 	nline = 0;
 	TEXTLIST_FOREACH(revp->textlines, textp) {
 		const char *p = textp->start;
+		char *q;
 		char op;
 		int arg1, arg2;
 
 		/* XXX check for parse errors */
 		op = *p++;
-		arg1 = strtoul(p, (char **)&p, 10) - 1;
-		arg2 = strtoul(p, (char **)&p, 10);
+		arg1 = (int)strtoul(p, &q, 10) - 1;
+		arg2 = (int)strtoul(q, &q, 10);
 		
 		/* Convert 'insert-after' semantics to 'insert-before' */
 		if (op == 'a' && oline <= arg1)
@@ -1012,7 +1022,7 @@ patch_add(struct rcspatch *pp, int op, int line, int nline, int len,
 
 	if (pp->len == pp->op_len) {
 		pp->op_len += pp->op_len + 1;
-		pp->op = realloc(pp->op, pp->op_len * sizeof(*pp->op));
+		pp->op = realloc(pp->op, (size_t)pp->op_len * sizeof(*pp->op));
 	}
 
 	opp = &pp->op[pp->len++];
@@ -1043,6 +1053,8 @@ id_lookup(struct rcstext *id) {
 	case 'c':
 		if (txtequ(id, &id_comment))
 			return ID_COMMENT;
+		if (txtequ(id, &id_commitid))
+			return ID_COMMITID;
 		break;
 	case 'd':
 		if (txtequ(id, &id_date))
@@ -1139,13 +1151,13 @@ gettok(struct parser *pp, struct token *tokp) {
 			tokp->value.start = p;
 
 			for (;;) {
-				if ((p = memchr(p, '@', end - p)) == NULL)
+				if ((p = memchr(p, '@', (size_t)(end - p))) == NULL)
 					errx(1, "no matching '@'");
 				if (p + 1 < end && p[1] == '@') {
 					p += 2;
 					continue;
 				}
-				tokp->value.len = p - tokp->value.start;
+				tokp->value.len = (int)(p - tokp->value.start);
 				tokp->type = TOKTYPE_STRING;
 				p++;
 				break;
@@ -1179,7 +1191,7 @@ gettok(struct parser *pp, struct token *tokp) {
 			}
 			break;
 		}
-		tokp->value.len = p - tokp->value.start;
+		tokp->value.len = (int)(p - tokp->value.start);
 
 		tokp->type = TOKTYPE_NUM;
 		for (p1 = tokp->value.start; p1 < p; p1++) {
@@ -1198,8 +1210,8 @@ done:
 
 int
 revbydate(const void *v1, const void *v2) {
-	struct revnode *revp1 = *(struct revnode **)v1;
-	struct revnode *revp2 = *(struct revnode **)v2;
+	const struct revnode *revp1 = *(struct revnode *const *)v1;
+	const struct revnode *revp2 = *(struct revnode *const *)v2;
 	int ret;
 
 	ret = -numcmp(&revp1->date, &revp2->date);

@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: rcshist.c,v 1.12 2005/02/08 00:27:47 iedowse Exp $
+ * $Id: rcshist.c,v 1.13 2015/03/01 14:26:14 tom Exp $
  */
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -38,9 +38,9 @@
 #include "misc.h"
 
 void filelist_expand(char ***filelistp, int *nfilesp);
-int filelist_ftscmp(const FTSENT * const *fe1, const FTSENT * const *fe2);
+int filelist_ftscmp(const FTSENT * *fe1, const FTSENT * *fe2);
 void prrev(struct revnode *revp);
-void prlist(char *prefix, struct textlist *tlp);
+void prlist(const char *prefix, struct textlist *tlp);
 void prlog(struct revnode *revp);
 void onerev(char *filename, char *revame);
 void usage(void);
@@ -109,7 +109,7 @@ main(int argc, char **argv) {
 	rnum = 0;
 	rlist_len = 0;
 
-	rcsp = malloc(nfiles * sizeof(*rcsp));
+	rcsp = malloc((size_t) nfiles * sizeof(*rcsp));
 	for (i = 0; i < nfiles; i++) {
 		struct revnode **rpp;
 
@@ -127,7 +127,7 @@ main(int argc, char **argv) {
 		for (rpp = rltmp; *rpp != NULL; rpp++) {
 			if (rnum == rlist_len) {
 				rlist_len += rlist_len + 1;
-				rlist = realloc(rlist, rlist_len *
+				rlist = realloc(rlist, (size_t) rlist_len *
 				    sizeof(*rlist));
 			}
 			rlist[rnum++] = *rpp;
@@ -135,7 +135,7 @@ main(int argc, char **argv) {
 		free(rltmp);
 	}
 
-	qsort(rlist, rnum, sizeof(*rlist), revbydate);
+	qsort(rlist, (size_t) rnum, sizeof(*rlist), revbydate);
 	for (i = 0; i < rnum; i++)
 		prrev(rlist[i]);
 	free(rlist);
@@ -181,7 +181,7 @@ onerev(char *filename, char *revname) {
 	if ((rcsp = rcsfile_open(filename)) == NULL)
 		err(1, "%s: rcsfile_open", filename);
 
-	revp = namedobjlist_lookup(rcsp->revs, revname, strlen(revname));
+	revp = namedobjlist_lookup(rcsp->revs, revname, (int) strlen(revname));
 	if (revp == NULL)
 		errx(1, "%s: %s: revision not found", filename, revname);
 
@@ -192,10 +192,10 @@ onerev(char *filename, char *revname) {
 }
 
 void
-prlist(char *prefix, struct textlist *tlp) {
+prlist(const char *prefix, struct textlist *tlp) {
 	struct rcstext *textp;
 	int len = 0;
-	int prefixlen = strlen(prefix) + 4;
+	int prefixlen = (int) strlen(prefix) + 4;
 
 	if (tlp->len == 0)
 		return;
@@ -264,7 +264,7 @@ filelist_expand(char ***filelistp, int *nfilesp)
 
 		if (nfiles + 1 == newlist_arraysize) {
 			newlist_arraysize += newlist_arraysize + 1;
-			newlist = realloc(newlist, newlist_arraysize *
+			newlist = realloc(newlist, (size_t) newlist_arraysize *
 			    sizeof(*newlist));
 			if (newlist == NULL)
 				err(1, "realloc");
@@ -283,7 +283,7 @@ filelist_expand(char ***filelistp, int *nfilesp)
 }
 
 int
-filelist_ftscmp(const FTSENT * const *fe1, const FTSENT * const *fe2)
+filelist_ftscmp(const FTSENT * *fe1, const FTSENT * *fe2)
 {
 	return (strcoll((*fe1)->fts_name, (*fe2)->fts_name));
 }
