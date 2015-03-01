@@ -52,7 +52,7 @@ void
 textlist_add(struct textlist *tlp, struct rcstext *text) {
 	if (tlp->list_len == tlp->len) {
 		tlp->list_len += tlp->list_len + 1;
-		tlp->list = realloc(tlp->list, tlp->list_len *
+		tlp->list = realloc(tlp->list, (size_t)tlp->list_len *
 		    sizeof(*tlp->list));
 	}
 
@@ -61,7 +61,7 @@ textlist_add(struct textlist *tlp, struct rcstext *text) {
 
 int
 txtequ(struct rcstext *p1, struct rcstext *p2) {
-	return p1->len == p2->len && bcmp(p1->start, p2->start, p1->len) == 0;
+	return p1->len == p2->len && bcmp(p1->start, p2->start, (size_t)p1->len) == 0;
 }
 
 void
@@ -71,13 +71,13 @@ numinit(struct rcsnum *p) {
 }
 
 int
-numequ(struct rcsnum *p1, struct rcsnum *p2) {
+numequ(const struct rcsnum *p1, const struct rcsnum *p2) {
 	return p1->len == p2->len && bcmp(p1->num, p2->num,
-	    RCSNUM_BYTES(p1)) == 0;
+	    (size_t)RCSNUM_BYTES(p1)) == 0;
 }
 
 int
-numcmp(struct rcsnum *p1, struct rcsnum *p2) {
+numcmp(const struct rcsnum *p1, const struct rcsnum *p2) {
 	int i;
 
 	for (i = 0; i < p1->len && i < p2->len; i++)
@@ -88,16 +88,16 @@ numcmp(struct rcsnum *p1, struct rcsnum *p2) {
 }
 
 void
-numcpy(struct rcsnum *p1, struct rcsnum *p2) {
+numcpy(const struct rcsnum *p1, struct rcsnum *p2) {
 	p2->len = p1->len;
-	p2->num = malloc(RCSNUM_BYTES(p1));
-	bcopy(p1->num, p2->num, RCSNUM_BYTES(p2));
+	p2->num = malloc((size_t)RCSNUM_BYTES(p1));
+	bcopy(p1->num, p2->num, (size_t)RCSNUM_BYTES(p2));
 }
 
 void
 numextend(struct rcsnum *p, int len) {
 	p->len = len;
-	p->num = realloc(p->num, RCSNUM_BYTES(p));
+	p->num = realloc(p->num, (size_t)RCSNUM_BYTES(p));
 }
 
 
@@ -120,13 +120,13 @@ text2num(struct rcstext *textp, struct rcsnum *nump) {
 	i = 0;
 	p = textp->start;
 	endp = textp->start + textp->len;
-	while (p < endp && (p = memchr(p, '.', endp - p)) != NULL) {
+	while (p < endp && (p = memchr(p, '.', (size_t)(endp - p))) != NULL) {
 		i++;
 		p++;
 	}
 
 	nump->len = i + 1;
-	nump->num = malloc(RCSNUM_BYTES(nump));
+	nump->num = malloc((size_t)RCSNUM_BYTES(nump));
 	
 	p = textp->start;
 	for (i = 0; i < nump->len; i++) {
@@ -158,12 +158,12 @@ textprint(struct rcstext *textp) {
 	const char *p = textp->start;
 	const char *end = textp->start + textp->len;
 	
-	while (p < end && (p1 = memchr(p, '@', end - p)) != NULL) {
-		fwrite(p, p1 - p + 1, 1, stdout);
+	while (p < end && (p1 = memchr(p, '@', (size_t)(end - p))) != NULL) {
+		fwrite(p, (size_t)(p1 - p + 1), 1, stdout);
 		p = p1 + 2;
 	}
 	if (p < end)
-		fwrite(p, end - p, 1, stdout);
+		fwrite(p, (size_t)(end - p), 1, stdout);
 }
 
 struct textlist *
@@ -178,11 +178,11 @@ textsplit(struct rcstext *textp) {
 	while (p != NULL && p < end) {
 		line.start = p;
 
-		if ((p = memchr(p, '\n', end - p)) == NULL)
+		if ((p = memchr(p, '\n', (size_t)(end - p))) == NULL)
 			p = end;
 		else
 			p++;
-		line.len = p - line.start;
+		line.len = (int)(p - line.start);
 
 		textlist_add(tlp, &line);
 	}

@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: misc.h,v 1.2 2001/05/20 14:51:33 iedowse Exp $
+ * $Id: misc.h,v 1.3 2015/03/01 14:42:35 tom Exp $
  */
 #ifndef MISC_H
 #define MISC_H
@@ -37,7 +37,7 @@ struct rcsnum {
 	int len;
 };
 
-#define RCSNUM_BYTES(nump) ((nump)->len * sizeof(*(nump)->num))
+#define RCSNUM_BYTES(nump) (int)((size_t)(nump)->len * sizeof(*(nump)->num))
 
 struct textlist {
 	struct rcstext *list;
@@ -55,9 +55,9 @@ void textlist_add(struct textlist *tlp, struct rcstext *text);
 int txtequ(struct rcstext *p1, struct rcstext *p2);
 
 void numinit(struct rcsnum *p);
-int numequ(struct rcsnum *p1, struct rcsnum *p2);
-int numcmp(struct rcsnum *p1, struct rcsnum *p2);
-void numcpy(struct rcsnum *p1, struct rcsnum *p2);
+int numequ(const struct rcsnum *p1, const struct rcsnum *p2);
+int numcmp(const struct rcsnum *p1, const struct rcsnum *p2);
+void numcpy(const struct rcsnum *p1, struct rcsnum *p2);
 void numextend(struct rcsnum *p, int len);
 void numfree(struct rcsnum *p);
 void text2num(struct rcstext *textp, struct rcsnum *nump);

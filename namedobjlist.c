@@ -22,24 +22,24 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: namedobjlist.c,v 1.4 2003/10/30 17:14:57 iedowse Exp $
+ * $Id: namedobjlist.c,v 1.6 2015/03/01 17:04:37 tom Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "namedobjlist.h"
 
-static int nol_hash(Namedobjlist *self, const void *str, int strlen);
+static int nol_hash(Namedobjlist *self, const void *str, int my_len);
 static void nol_rehash(Namedobjlist *self, int log2hs);
 static struct namedobjlist_item *namedobjlist_find(Namedobjlist *self,
     const void *name, int namelen);
 
 
 static int
-nol_hash(Namedobjlist *self, const void *vstr, int strlen) {
+nol_hash(Namedobjlist *self, const void *vstr, int my_len) {
 	int hash = 0;
 	const unsigned char *str = vstr;
-	const unsigned char *send = str + strlen;
+	const unsigned char *send = str + my_len;
 
 	while (str < send) {
 		hash += (*str + 1) << ((hash^*str) & 15);
@@ -55,7 +55,7 @@ nol_rehash(Namedobjlist *self, int log2hs) {
 	int i;
 
 	self->log2hashsize = log2hs;
-	self->hash = realloc(self->hash, (1<<log2hs) * sizeof(*self->hash));
+	self->hash = realloc(self->hash, (size_t)(1<<log2hs) * sizeof(*self->hash));
 
 	for (i = 0; i < (1<<log2hs); i++)
 		TAILQ_INIT(&self->hash[i]);
@@ -103,7 +103,7 @@ namedobjlist_find(Namedobjlist *self, const void *name, int namelen) {
 
 	TAILQ_FOREACH(itemp, hash, hash)
 		if (itemp->namelen == namelen && bcmp(name, itemp->name,
-		    namelen) == 0)
+		    (size_t)namelen) == 0)
 			return itemp;
 	return NULL;
 }
@@ -137,15 +137,15 @@ namedobjlist_additem(Namedobjlist *self, const void *name, int namelen,
 
 	if (namedobjlist_find(self, name, namelen) != NULL) {
 		fprintf(stderr, "namedobjlist_additem: '%.*s' exists!\n",
-		    namelen, (char *)name); /* XXX strvisx this */
+		    namelen, (const char *)name); /* XXX strvisx this */
 		abort();
 	}
 
 	itemp = malloc(sizeof(*itemp));
 	hash = &self->hash[nol_hash(self, name, namelen)];
 
-	itemp->name = malloc(namelen + 1);
-	bcopy(name, itemp->name, namelen);
+	itemp->name = malloc((size_t)namelen + 1);
+	bcopy(name, itemp->name, (size_t)namelen);
 	((char *)itemp->name)[namelen] = '\0';
 	itemp->namelen = namelen;
 	itemp->data = data;
@@ -192,7 +192,7 @@ nol_iter_reset(Namedobjlist_iter *self) {
 }
 
 void *
-nol_iter_next(Namedobjlist_iter *self, void **namep, int *namelenp) {
+nol_iter_next(Namedobjlist_iter *self, const void **namep, int *namelenp) {
 	struct namedobjlist_item *item;
 
 	if ((item = self->nextitem) == NULL)

@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: strbuf.c,v 1.3 2004/05/30 11:21:40 iedowse Exp $
+ * $Id: strbuf.c,v 1.4 2015/03/01 14:58:11 tom Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,7 +61,8 @@ void sb_free(struct strbuf *sb) {
  * Return a pointer to the string for printing/copying etc.
  */
 char *sb_ptr(struct strbuf *sb) {
-	return sb->pos == 0 ? "" : sb->buf;
+	static char empty[1];
+	return sb->pos == 0 ? empty : sb->buf;
 }
 
 int sb_len(struct strbuf *sb) {
@@ -102,20 +103,20 @@ sb_pullupto(struct strbuf *sb, int len) {
 	else
 		sb->buflen = STRBUF_MIN + len;
 
-	sb->buf = realloc(sb->buf, sb->buflen);
+	sb->buf = realloc(sb->buf, (size_t)sb->buflen);
 }
 
 void sb_appendstr(struct strbuf *sb, const char *string) {
-	int len = strlen(string);
+	int len = (int)strlen(string);
 
 	sb_pullupto(sb, len + sb->pos + 1);
-	bcopy(string, &sb->buf[sb->pos], len + 1);
+	bcopy(string, &sb->buf[sb->pos], (size_t)len + 1);
 	sb->pos += len;
 }
 
 void sb_appendbytes(struct strbuf *sb, const char *str, int len) {
 	sb_pullupto(sb, len + sb->pos + 1);
-	bcopy(str, &sb->buf[sb->pos], len);
+	bcopy(str, &sb->buf[sb->pos], (size_t)len);
 	sb->pos += len;
 	sb->buf[sb->pos] = '\0';
 }
@@ -158,7 +159,7 @@ int sb_getline(FILE *fp, Strbuf *sb) {
 	sb_reset(sb);
 
 	while ((c = getc(fp)) != EOF && c != '\n')
-		sb_appendchar(sb, c);
+		sb_appendchar(sb, (char)c);
 
 	cnt = sb_len(sb);
 	/* Count the '\n', but don't add it to the string */
@@ -244,13 +245,13 @@ int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 	}
 	
 	if (buf == NULL) {
-		Strbuf *tmpbuf;
+		Strbuf *tmpbuf2;
 		fprintf(stderr, "sb_vappendf: NULL buf arg!\n");
-		tmpbuf = sb_create();
-		if (tmpbuf != NULL) {
-			sb_vappendf(tmpbuf, fmt, args);
-			fprintf(stderr, "Output was '%s'\n", sb_ptr(tmpbuf));
-			sb_free(tmpbuf);
+		tmpbuf2 = sb_create();
+		if (tmpbuf2 != NULL) {
+			sb_vappendf(tmpbuf2, fmt, args);
+			fprintf(stderr, "Output was '%s'\n", sb_ptr(tmpbuf2));
+			sb_free(tmpbuf2);
 		}
 		abort();
 	}
@@ -259,7 +260,7 @@ int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 	for (; *fmt; fmt++) {
 
 		if ((p = index(fmt, '%'))) {
-			sb_appendbytes(buf, fmt, p - fmt);
+			sb_appendbytes(buf, fmt, (int)(p - fmt));
 			fmt += p - fmt;
 			if (fmt[1])
 				fmt++;
@@ -331,18 +332,20 @@ int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 
 		switch (*fmt) {
 		case 'c':
-			*--fieldp = va_arg(ap, int);
+			*--fieldp = (char)va_arg(ap, int);
 			break;
 
 		case 's':
 			fieldp = va_arg(ap, char *);
-			if (!fieldp)
-				fieldp = "(null)";
+			if (!fieldp) {
+				static char empty[] = "(null)";
+				fieldp = empty;
+			}
 			if (prec >= 0)
-				flen = (p = memchr(fieldp, '\0', prec)) ?
-				    p - fieldp : prec;
+				flen = (p = memchr(fieldp, '\0', (size_t)prec)) ?
+				    (int)(p - fieldp) : prec;
 			else
-				flen = strlen(fieldp);
+				flen = (int)strlen(fieldp);
 			break;
 		
 		case 'p':
@@ -355,11 +358,11 @@ int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 		case 'd':
 		case 'i':
 			if (flags & FLG_LONG)
-				ul_arg = va_arg(ap, long);
+				ul_arg = va_arg(ap, unsigned long);
 			else if (flags & FLG_SHORT)
-				ul_arg = (short)va_arg(ap, int);
+				ul_arg = (unsigned long)(short)va_arg(ap, int);
 			else 
-				ul_arg = va_arg(ap, int);
+				ul_arg = (unsigned long)va_arg(ap, int);
 			if ((long)ul_arg < 0) {
 				sign = '-';
 				ul_arg = -ul_arg;
@@ -387,7 +390,7 @@ donum:
 			switch (base) {
 			case 8:
 				do {	
-					*--fieldp = digit2ch(ul_arg & 7);
+					*--fieldp = (char)digit2ch(ul_arg & 7);
 					ul_arg = ul_arg >> 3;
 				} while(ul_arg);
 				if (flags & FLG_ALT && *fieldp != '0')
@@ -395,7 +398,7 @@ donum:
 				break;
 			case 10:
 				do {
-					*--fieldp = digit2ch(ul_arg % 10);
+					*--fieldp = (char)digit2ch(ul_arg % 10);
 					ul_arg = ul_arg / 10;
 				} while(ul_arg);
 				break;
@@ -404,9 +407,9 @@ donum:
 					flags |= FLG_HEX;
 				i = (*fmt == 'p' ? 'x' : *fmt) - 'X' + 'A' - 10;
 				do {
-					*--fieldp = ((ul_arg & 15) < 10) ? 
+					*--fieldp = (char)(((ul_arg & 15) < 10) ? 
 					    digit2ch(ul_arg & 15) :
-					    ((ul_arg & 15) + i);
+					    ((ul_arg & 15) + (unsigned long)i));
 					ul_arg = ul_arg >> 4;
 				} while(ul_arg);
 				break;
@@ -424,7 +427,7 @@ donum:
 			abort();
 		}
 		if (flen == -1)
-			flen = tmpbuf + FBUF_LEN - fieldp;
+			flen = (int)(tmpbuf + FBUF_LEN - fieldp);
 		n = (sign ? 1 : 0) + ((flags & FLG_HEX) ? 2 : 0) +
 		    (prec > flen ? prec : flen);
 

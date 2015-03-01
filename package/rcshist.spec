@@ -1,8 +1,8 @@
 Summary: rcshist - display RCS change history
 %define AppProgram rcshist
 %define AppVersion 1.04
-%define AppRelease 20150228
-# $Id: rcshist.spec,v 1.1 2015/03/01 01:58:15 tom Exp $
+%define AppRelease 20150301
+# $Id: rcshist.spec,v 1.2 2015/03/01 15:14:41 tom Exp $
 Name: %{AppProgram}
 Version: %{AppVersion}
 Release: %{AppRelease}

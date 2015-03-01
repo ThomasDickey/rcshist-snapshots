@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: namedobjlist.h,v 1.3 2001/05/20 14:51:33 iedowse Exp $
+ * $Id: namedobjlist.h,v 1.4 2015/03/01 17:04:14 tom Exp $
  */
 #ifndef NAMEDOBJLIST_H
 #define NAMEDOBJLIST_H
@@ -64,7 +64,7 @@ void *namedobjlist_removeitem(Namedobjlist *self, const void *name,
 
 Namedobjlist_iter *nol_iter_create(Namedobjlist *nol);
 void nol_iter_reset(Namedobjlist_iter *self);
-void *nol_iter_next(Namedobjlist_iter *self, void **namep, int *namelenp);
+void *nol_iter_next(Namedobjlist_iter *self, const void **namep, int *namelenp);
 void nol_iter_destroy(Namedobjlist_iter *self);
 
 #endif
