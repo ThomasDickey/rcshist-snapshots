@@ -1,0 +1,94 @@
+# $Id: makefile.in,v 1.1 2015/02/28 23:20:57 tom Exp $
+
+#### Start of system configuration section. ####
+
+srcdir 		= @srcdir@
+VPATH  		= @srcdir@
+
+CC		= @CC@
+
+INSTALL		= @INSTALL@
+INSTALL_PROGRAM	= @INSTALL_PROGRAM@
+INSTALL_DATA	= @INSTALL_DATA@
+transform	= @program_transform_name@
+
+DEFINES		=
+EXTRA_CFLAGS	= @EXTRA_CFLAGS@
+CPPFLAGS	= -I. -I$(srcdir) $(DEFINES) -DHAVE_CONFIG_H @CPPFLAGS@
+CFLAGS		= @CFLAGS@ $(CPPFLAGS) $(EXTRA_CFLAGS)
+
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
+
+CTAGS		= @CTAGS@
+ETAGS		= @ETAGS@
+LINT		= @LINT@
+LINTFLAGS	= @LINT_OPTS@
+RM		= rm -f
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+
+datarootdir	= @datarootdir@
+bindir		= $(DESTDIR)@bindir@
+mandir		= $(DESTDIR)@mandir@/man1
+manext		= 1
+
+x		= @EXEEXT@
+o		= .@OBJEXT@
+
+THIS		= rcshist
+C_FILES		= rcshist.c namedobjlist.c rcsfile.c misc.c strbuf.c
+OBJECTS		= rcshist$o namedobjlist$o rcsfile$o misc$o strbuf$o
+
+################################################################################
+.SUFFIXES : .c $o .i
+
+.c$o:
+	@RULE_CC@
+	@ECHO_CC@$(CC) -c $(CFLAGS) $<
+
+.c.i :
+	@RULE_CC@
+	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
+################################################################################
+
+TRANSFORM_BIN = sed 's/$x$$//'       |sed '$(transform)'|sed 's/$$/$x/'
+TRANSFORM_MAN = sed 's/$(manext)$$//'|sed '$(transform)'|sed 's/$$/$(manext)/'
+
+actual_bin = `echo $(THIS)$x        | $(TRANSFORM_BIN)`
+actual_man = `echo $(THIS).$(manext)| $(TRANSFORM_MAN)`
+
+all: ${THIS}$x
+
+${THIS}$x : ${OBJECTS}
+	@ECHO_LD@${CC} ${CFLAGS} -o ${THIS} ${LDFLAGS} ${OBJECTS} ${LIBS}
+
+clean ::
+	$(RM) ${THIS} ${OBJECTS} *.core *$o core *.plist
+
+distclean :: clean
+	$(RM) config.log config.cache config.status config.h
+	$(RM) makefile
+
+install: all installdirs
+	$(INSTALL_PROGRAM) $(THIS)$x $(bindir)/$(actual_bin)
+	- $(INSTALL_DATA) $(srcdir)/$(THIS).1 $(mandir)/$(actual_man)
+
+installdirs:
+	mkdir -p $(bindir)
+	- mkdir -p $(mandir)
+
+uninstall:
+	- rm -f $(bindir)/$(actual_bin)
+	- rm -f $(mandir)/$(actual_man)
+
+################################################################################
+tags: $(H_FILES) $(C_FILES) 
+	$(CTAGS) $(C_FILES) $(H_FILES)
+
+lint: $(C_FILES) 
+	$(LINT) $(LINTFLAGS) $(CPPFLAGS) $(C_FILES)
+
+@MAKE_UPPER_TAGS@TAGS: $(H_FILES) $(C_FILES) 
+@MAKE_UPPER_TAGS@	$(ETAGS) $(C_FILES) $(H_FILES)
