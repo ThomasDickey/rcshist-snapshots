@@ -1,3 +1,43 @@
+2018-03-25  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* package/debian/copyright: update/correct
+
+	* package/debian/watch: update ftp-url
+
+	* package/debian/changelog: bump
+
+	* package/debian/compat: update compat to 7
+
+	* package/debian/rules: use Debian build-flags
+	enable dh_installdocs, for copyright
+
+	* package/debian/control:
+	change to "optional", since "extra" is becoming deprecated
+
+	* namedobjlist.h: fix a pedantic warning with gcc 4.9.4
+
+	* strbuf.c: fix a fall-through warning with gcc 6
+
+	* package/rcshist.spec: update ftp-url
+	disable debug-package
+
+	* configure: regen
+
+	* makefile.in: cleanup the new temp-file
+
+	* aclocal.m4, configure.in:
+	updated CF_MAKE_DOCS relies upon --with-man2html option (add that)
+
+	* configure: regen
+
+	* aclocal.m4: resync with my-autoconf
+
+2018-02-05  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* config.sub: 2018-01-15
+
+	* config.guess: 2018-01-26
+
 2015-03-01  Thomas E. Dickey  <dickey@invisible-island.net>
 
 	* rcsfile.c, namedobjlist.c, namedobjlist.h: gcc warnings

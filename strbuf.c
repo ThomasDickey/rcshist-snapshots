@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: strbuf.c,v 1.4 2015/03/01 14:58:11 tom Exp $
+ * $Id: strbuf.c,v 1.5 2018/03/25 22:33:42 tom Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -350,6 +350,7 @@ int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 		
 		case 'p':
 			flags |= FLG_HEX;
+			/* FALLTHRU */
 		case 'x':
 		case 'X':
 			base = 16;

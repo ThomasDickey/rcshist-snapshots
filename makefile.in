@@ -1,4 +1,4 @@
-# $Id: makefile.in,v 1.1 2015/02/28 23:20:57 tom Exp $
+# $Id: makefile.in,v 1.2 2018/03/25 21:54:17 tom Exp $
 
 #### Start of system configuration section. ####
 
@@ -65,7 +65,7 @@ ${THIS}$x : ${OBJECTS}
 	@ECHO_LD@${CC} ${CFLAGS} -o ${THIS} ${LDFLAGS} ${OBJECTS} ${LIBS}
 
 clean ::
-	$(RM) ${THIS} ${OBJECTS} *.core *$o core *.plist
+	$(RM) ${THIS} ${OBJECTS} *.core *$o core *.plist *.tmp
 
 distclean :: clean
 	$(RM) config.log config.cache config.status config.h
