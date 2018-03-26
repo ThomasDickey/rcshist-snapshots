@@ -1,7 +1,7 @@
 Source: rcshist
 Maintainer: Dave Beckett <dajobe@debian.org>
 Section: devel
-Priority: extra
+Priority: optional
 Standards-Version: 3.8.4
 Build-Depends: debhelper (>= 5)
 Homepage: http://invisible-island.net/rcshist/

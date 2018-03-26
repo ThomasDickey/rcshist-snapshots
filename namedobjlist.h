@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: namedobjlist.h,v 1.4 2015/03/01 17:04:14 tom Exp $
+ * $Id: namedobjlist.h,v 1.5 2018/03/25 22:44:22 tom Exp $
  */
 #ifndef NAMEDOBJLIST_H
 #define NAMEDOBJLIST_H
@@ -41,7 +41,7 @@ struct namedobjlist_item {
 };
 
 struct namedobjlist {
-	TAILQ_HEAD(, namedobjlist_item) all;
+	TAILQ_HEAD(all_hashhead, namedobjlist_item) all;
 	TAILQ_HEAD(nol_hashhead, namedobjlist_item) *hash;
 	int log2hashsize;
 	int nitems;
