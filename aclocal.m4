@@ -1,31 +1,27 @@
-dnl $Id: aclocal.m4,v 1.3 2018/03/25 21:51:04 tom Exp $
+dnl $Id: aclocal.m4,v 1.5 2019/01/06 23:31:10 tom Exp $
 dnl Macros for rcshist configure script (Thomas E. Dickey)
 dnl ---------------------------------------------------------------------------
-dnl Copyright 2015,2018 Thomas E. Dickey
-dnl 
-dnl Permission is hereby granted, free of charge, to any person obtaining a
-dnl copy of this software and associated documentation files (the
-dnl "Software"), to deal in the Software without restriction, including
-dnl without limitation the rights to use, copy, modify, merge, publish,
-dnl distribute, distribute with modifications, sublicense, and/or sell
-dnl copies of the Software, and to permit persons to whom the Software is
-dnl furnished to do so, subject to the following conditions:
-dnl 
-dnl The above copyright notice and this permission notice shall be included
-dnl in all copies or portions of the Software.
-dnl 
-dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-dnl IN NO EVENT SHALL THE ABOVE COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-dnl DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-dnl OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
-dnl THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-dnl 
-dnl Except as contained in this notice, the name(s) of the above copyright
-dnl holders shall not be used in advertising or otherwise to promote the
-dnl sale, use or other dealings in this Software without prior written
-dnl authorization.
+dnl Copyright 2015-2018,2019 Thomas E. Dickey
+dnl
+dnl Redistribution and use in source and binary forms, with or without
+dnl modification, are permitted provided that the following conditions
+dnl are met:
+dnl 1. Redistributions of source code must retain the above copyright
+dnl    notice, this list of conditions and the following disclaimer
+dnl    in this position and unchanged.
+dnl 2. The name of the author may not be used to endorse or promote products
+dnl    derived from this software withough specific prior written permission
+dnl
+dnl THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+dnl IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+dnl OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+dnl IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+dnl INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+dnl NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+dnl DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+dnl THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+dnl (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+dnl THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------
 dnl CF_ACVERSION_CHECK version: 5 updated: 2014/06/04 19:11:49
@@ -181,7 +177,7 @@ ifelse([$3],,[    :]dnl
 ])dnl
 ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CC_ENV_FLAGS version: 8 updated: 2017/09/23 08:50:24
+dnl CF_CC_ENV_FLAGS version: 9 updated: 2018/07/29 18:03:26
 dnl ---------------
 dnl Check for user's environment-breakage by stuffing CFLAGS/CPPFLAGS content
 dnl into CC.  This will not help with broken scripts that wrap the compiler
@@ -198,11 +194,28 @@ AC_DEFUN([CF_CC_ENV_FLAGS],
 # This should have been defined by AC_PROG_CC
 : ${CC:=cc}
 
+AC_MSG_CHECKING(\$CFLAGS variable)
+case "x$CFLAGS" in
+(*-[[IUD]]*)
+	AC_MSG_RESULT(broken)
+	AC_MSG_WARN(your environment uses the CFLAGS variable to hold CPPFLAGS options)
+	cf_flags="$CFLAGS"
+	CFLAGS=
+	for cf_arg in $cf_flags
+	do
+		CF_ADD_CFLAGS($cf_arg)
+	done
+	;;
+(*)
+	AC_MSG_RESULT(ok)
+	;;
+esac
+
 AC_MSG_CHECKING(\$CC variable)
 case "$CC" in
 (*[[\ \	]]-*)
 	AC_MSG_RESULT(broken)
-	AC_MSG_WARN(your environment misuses the CC variable to hold CFLAGS/CPPFLAGS options)
+	AC_MSG_WARN(your environment uses the CC variable to hold CFLAGS/CPPFLAGS options)
 	# humor him...
 	cf_prog=`echo "$CC" | sed -e 's/	/ /g' -e 's/[[ ]]* / /g' -e 's/[[ ]]*[[ ]]-[[^ ]].*//'`
 	cf_flags=`echo "$CC" | ${AWK:-awk} -v prog="$cf_prog" '{ printf("%s", [substr]([$]0,1+length(prog))); }'`
@@ -480,7 +493,7 @@ if test "$GCC" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 32 updated: 2015/04/12 15:39:00
+dnl CF_GCC_WARNINGS version: 33 updated: 2018/06/20 20:23:13
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -574,7 +587,7 @@ then
 			test -n "$verbose" && AC_MSG_RESULT(... -$cf_opt)
 			case $cf_opt in
 			(Wcast-qual)
-				CPPFLAGS="$CPPFLAGS -DXTSTRINGDEFINES"
+				CF_APPEND_TEXT(CPPFLAGS,-DXTSTRINGDEFINES)
 				;;
 			(Winline)
 				case $GCC_VERSION in
@@ -601,7 +614,7 @@ rm -rf conftest*
 AC_SUBST(EXTRA_CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GNU_SOURCE version: 7 updated: 2016/08/05 05:15:37
+dnl CF_GNU_SOURCE version: 10 updated: 2018/12/10 20:09:41
 dnl -------------
 dnl Check if we must define _GNU_SOURCE to get a reasonable value for
 dnl _XOPEN_SOURCE, upon which many POSIX definitions depend.  This is a defect
@@ -609,38 +622,106 @@ dnl (or misfeature) of glibc2, which breaks portability of many applications,
 dnl since it is interwoven with GNU extensions.
 dnl
 dnl Well, yes we could work around it...
+dnl
+dnl Parameters:
+dnl	$1 is the nominal value for _XOPEN_SOURCE
 AC_DEFUN([CF_GNU_SOURCE],
 [
-AC_CACHE_CHECK(if we must define _GNU_SOURCE,cf_cv_gnu_source,[
+cf_gnu_xopen_source=ifelse($1,,500,$1)
+
+AC_CACHE_CHECK(if this is the GNU C library,cf_cv_gnu_library,[
 AC_TRY_COMPILE([#include <sys/types.h>],[
-#ifndef _XOPEN_SOURCE
-make an error
-#endif],
-	[cf_cv_gnu_source=no],
-	[cf_save="$CPPFLAGS"
-	 CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
-	 AC_TRY_COMPILE([#include <sys/types.h>],[
-#ifdef _XOPEN_SOURCE
-make an error
-#endif],
-	[cf_cv_gnu_source=no],
-	[cf_cv_gnu_source=yes])
-	CPPFLAGS="$cf_save"
-	])
+	#if __GLIBC__ > 0 && __GLIBC_MINOR__ >= 0
+		return 0;
+	#elif __NEWLIB__ > 0 && __NEWLIB_MINOR__ >= 0
+		return 0;
+	#else
+	#	error not GNU C library
+	#endif],
+	[cf_cv_gnu_library=yes],
+	[cf_cv_gnu_library=no])
 ])
 
-if test "$cf_cv_gnu_source" = yes
-then
-AC_CACHE_CHECK(if we should also define _DEFAULT_SOURCE,cf_cv_default_source,[
-CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
-	AC_TRY_COMPILE([#include <sys/types.h>],[
-#ifdef _DEFAULT_SOURCE
-make an error
-#endif],
-		[cf_cv_default_source=no],
-		[cf_cv_default_source=yes])
+if test x$cf_cv_gnu_library = xyes; then
+
+	# With glibc 2.19 (13 years after this check was begun), _DEFAULT_SOURCE
+	# was changed to help a little.  newlib incorporated the change about 4
+	# years later.
+	AC_CACHE_CHECK(if _DEFAULT_SOURCE can be used as a basis,cf_cv_gnu_library_219,[
+		cf_save="$CPPFLAGS"
+		CF_APPEND_TEXT(CPPFLAGS,-D_DEFAULT_SOURCE)
+		AC_TRY_COMPILE([#include <sys/types.h>],[
+			#if (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 19) || (__GLIBC__ > 2)
+				return 0;
+			#elif (__NEWLIB__ == 2 && __NEWLIB_MINOR__ >= 4) || (__GLIBC__ > 3)
+				return 0;
+			#else
+			#	error GNU C library __GLIBC__.__GLIBC_MINOR__ is too old
+			#endif],
+			[cf_cv_gnu_library_219=yes],
+			[cf_cv_gnu_library_219=no])
+		CPPFLAGS="$cf_save"
 	])
-test "$cf_cv_default_source" = yes && CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
+
+	if test "x$cf_cv_gnu_library_219" = xyes; then
+		cf_save="$CPPFLAGS"
+		AC_CACHE_CHECK(if _XOPEN_SOURCE=$cf_gnu_xopen_source works with _DEFAULT_SOURCE,cf_cv_gnu_dftsrc_219,[
+			CF_ADD_CFLAGS(-D_DEFAULT_SOURCE -D_XOPEN_SOURCE=$cf_gnu_xopen_source)
+			AC_TRY_COMPILE([
+				#include <limits.h>
+				#include <sys/types.h>
+				],[
+				#if (_XOPEN_SOURCE >= $cf_gnu_xopen_source) && (MB_LEN_MAX > 1)
+					return 0;
+				#else
+				#	error GNU C library is too old
+				#endif],
+				[cf_cv_gnu_dftsrc_219=yes],
+				[cf_cv_gnu_dftsrc_219=no])
+			])
+		test "x$cf_cv_gnu_dftsrc_219" = "xyes" || CPPFLAGS="$cf_save"
+	else
+		cf_cv_gnu_dftsrc_219=maybe
+	fi
+
+	if test "x$cf_cv_gnu_dftsrc_219" != xyes; then
+
+		AC_CACHE_CHECK(if we must define _GNU_SOURCE,cf_cv_gnu_source,[
+		AC_TRY_COMPILE([#include <sys/types.h>],[
+			#ifndef _XOPEN_SOURCE
+			#error	expected _XOPEN_SOURCE to be defined
+			#endif],
+			[cf_cv_gnu_source=no],
+			[cf_save="$CPPFLAGS"
+			 CF_ADD_CFLAGS(-D_GNU_SOURCE)
+			 AC_TRY_COMPILE([#include <sys/types.h>],[
+				#ifdef _XOPEN_SOURCE
+				#error	expected _XOPEN_SOURCE to be undefined
+				#endif],
+				[cf_cv_gnu_source=no],
+				[cf_cv_gnu_source=yes])
+			CPPFLAGS="$cf_save"
+			])
+		])
+
+		if test "$cf_cv_gnu_source" = yes
+		then
+		AC_CACHE_CHECK(if we should also define _DEFAULT_SOURCE,cf_cv_default_source,[
+			CF_APPEND_TEXT(CPPFLAGS,-D_GNU_SOURCE)
+			AC_TRY_COMPILE([#include <sys/types.h>],[
+				#ifdef _DEFAULT_SOURCE
+				#error	expected _DEFAULT_SOURCE to be undefined
+				#endif],
+				[cf_cv_default_source=no],
+				[cf_cv_default_source=yes])
+			])
+			if test "$cf_cv_default_source" = yes
+			then
+				CF_APPEND_TEXT(CPPFLAGS,-D_DEFAULT_SOURCE)
+			fi
+		fi
+	fi
+
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -888,7 +969,7 @@ case ".[$]$1" in
 esac
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_POSIX_C_SOURCE version: 9 updated: 2015/04/12 15:39:00
+dnl CF_POSIX_C_SOURCE version: 11 updated: 2018/12/31 20:46:17
 dnl -----------------
 dnl Define _POSIX_C_SOURCE to the given level, and _POSIX_SOURCE if needed.
 dnl
@@ -903,7 +984,10 @@ dnl
 dnl Parameters:
 dnl	$1 is the nominal value for _POSIX_C_SOURCE
 AC_DEFUN([CF_POSIX_C_SOURCE],
-[
+[AC_REQUIRE([CF_POSIX_VISIBLE])dnl
+
+if test "$cf_cv_posix_visible" = no; then
+
 cf_POSIX_C_SOURCE=ifelse([$1],,199506L,[$1])
 
 cf_save_CFLAGS="$CFLAGS"
@@ -941,7 +1025,8 @@ make an error
 	 fi
 	 CF_MSG_LOG(ifdef from value $cf_POSIX_C_SOURCE)
 	 CFLAGS="$cf_trim_CFLAGS"
-	 CPPFLAGS="$cf_trim_CPPFLAGS $cf_cv_posix_c_source"
+	 CPPFLAGS="$cf_trim_CPPFLAGS"
+	 CF_APPEND_TEXT(CPPFLAGS,$cf_cv_posix_c_source)
 	 CF_MSG_LOG(if the second compile does not leave our definition intact error)
 	 AC_TRY_COMPILE([#include <sys/types.h>],[
 #ifndef _POSIX_C_SOURCE
@@ -959,6 +1044,35 @@ if test "$cf_cv_posix_c_source" != no ; then
 	CF_ADD_CFLAGS($cf_cv_posix_c_source)
 fi
 
+fi # cf_cv_posix_visible
+
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_POSIX_VISIBLE version: 1 updated: 2018/12/31 20:46:17
+dnl ----------------
+dnl POSIX documents test-macros which an application may set before any system
+dnl headers are included to make features available.
+dnl
+dnl Some BSD platforms (originally FreeBSD, but copied by a few others)
+dnl diverged from POSIX in 2002 by setting symbols which make all of the most
+dnl recent features visible in the system header files unless the application
+dnl overrides the corresponding test-macros.  Doing that introduces portability
+dnl problems.
+dnl
+dnl This macro makes a special check for the symbols used for this, to avoid a
+dnl conflicting definition.
+AC_DEFUN([CF_POSIX_VISIBLE],
+[
+AC_CACHE_CHECK(if the POSIX test-macros are already defined,cf_cv_posix_visible,[
+AC_TRY_COMPILE([#include <stdio.h>],[
+#if defined(__POSIX_VISIBLE) && ((__POSIX_VISIBLE - 0L) > 0) \
+	&& defined(__XSI_VISIBLE) && ((__XSI_VISIBLE - 0L) > 0) \
+	&& defined(__BSD_VISIBLE) && ((__BSD_VISIBLE - 0L) > 0) \
+	&& defined(__ISO_C_VISIBLE) && ((__ISO_C_VISIBLE - 0L) > 0)
+#error conflicting symbols found
+#endif
+],[cf_cv_posix_visible=no],[cf_cv_posix_visible=yes])
+])
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_PROG_CC version: 4 updated: 2014/07/12 18:57:58
@@ -1019,7 +1133,7 @@ $1=`echo "$2" | \
 		-e 's/-[[UD]]'"$3"'\(=[[^ 	]]*\)\?[$]//g'`
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_TRY_XOPEN_SOURCE version: 1 updated: 2011/10/30 17:09:50
+dnl CF_TRY_XOPEN_SOURCE version: 2 updated: 2018/06/20 20:23:13
 dnl -------------------
 dnl If _XOPEN_SOURCE is not defined in the compile environment, check if we
 dnl can define it successfully.
@@ -1035,7 +1149,7 @@ make an error
 #endif],
 	[cf_cv_xopen_source=no],
 	[cf_save="$CPPFLAGS"
-	 CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=$cf_XOPEN_SOURCE"
+	 CF_APPEND_TEXT(CPPFLAGS,-D_XOPEN_SOURCE=$cf_XOPEN_SOURCE)
 	 AC_TRY_COMPILE([
 #include <stdlib.h>
 #include <string.h>
@@ -1105,7 +1219,7 @@ if test "$with_dmalloc" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_MAN2HTML version: 7 updated: 2018/01/07 13:16:19
+dnl CF_WITH_MAN2HTML version: 8 updated: 2018/06/27 18:44:03
 dnl ----------------
 dnl Check for man2html and groff.  Prefer man2html over groff, but use groff
 dnl as a fallback.  See
@@ -1240,7 +1354,7 @@ CF_EOF
 	done
 
 	LC_ALL=C LC_CTYPE=C LANG=C LANGUAGE=C $NROFF_PATH -man conftest.in >conftest.out
-	cf_man2html_page=`fgrep -n HEAD1 conftest.out |tail -n 1 |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`
+	cf_man2html_page=`fgrep -n HEAD1 conftest.out |sed -n '$p' |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`
 	test -z "$cf_man2html_page" && cf_man2html_page=99999
 	test "$cf_man2html_page" -gt 100 && cf_man2html_page=99999
 
@@ -1299,7 +1413,7 @@ fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 52 updated: 2016/08/27 12:21:42
+dnl CF_XOPEN_SOURCE version: 55 updated: 2018/12/31 20:46:17
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -1310,6 +1424,9 @@ dnl	$1 is the nominal value for _XOPEN_SOURCE
 dnl	$2 is the nominal value for _POSIX_C_SOURCE
 AC_DEFUN([CF_XOPEN_SOURCE],[
 AC_REQUIRE([AC_CANONICAL_HOST])
+AC_REQUIRE([CF_POSIX_VISIBLE])
+
+if test "$cf_cv_posix_visible" = no; then
 
 cf_XOPEN_SOURCE=ifelse([$1],,500,[$1])
 cf_POSIX_C_SOURCE=ifelse([$2],,199506L,[$2])
@@ -1329,7 +1446,7 @@ case $host_os in
 	cf_xopen_source="-D_DARWIN_C_SOURCE"
 	cf_XOPEN_SOURCE=
 	;;
-(freebsd*|dragonfly*)
+(freebsd*|dragonfly*|midnightbsd*)
 	# 5.x headers associate
 	#	_XOPEN_SOURCE=600 with _POSIX_C_SOURCE=200112L
 	#	_XOPEN_SOURCE=500 with _POSIX_C_SOURCE=199506L
@@ -1348,7 +1465,7 @@ case $host_os in
 	cf_XOPEN_SOURCE=
 	;;
 (linux*|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin)
-	CF_GNU_SOURCE
+	CF_GNU_SOURCE($cf_XOPEN_SOURCE)
 	;;
 (minix*)
 	cf_xopen_source="-D_NETBSD_SOURCE" # POSIX.1-2001 features are ifdef'd with this...
@@ -1424,4 +1541,5 @@ make an error
 		CF_TRY_XOPEN_SOURCE
 	fi
 fi
+fi # cf_cv_posix_visible
 ])

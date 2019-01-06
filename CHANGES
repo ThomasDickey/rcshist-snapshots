@@ -1,3 +1,32 @@
+2019-01-06  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* package/debian/copyright, aclocal.m4:
+	use the same wording for copyright notice as the original code
+
+	* COPYING: RCS_BASE
+
+	* makefile.in: add dummy rule "check" to appease Arch mkpkg
+
+	* package/debian/changelog: fix typo
+
+	* package/debian/copyright: bump
+
+	* package/rcshist.spec: use hardening flags
+
+	* package/rcshist.spec, package/debian/changelog: bump
+
+	* configure: regen
+
+	* aclocal.m4: resync with my-autoconf
+
+2019-01-04  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* config.sub: 2019-01-05
+
+2019-01-02  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* config.guess: 2019-01-03
+
 2018-03-25  Thomas E. Dickey  <dickey@invisible-island.net>
 
 	* package/debian/copyright: update/correct
