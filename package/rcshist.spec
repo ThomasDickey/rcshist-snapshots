@@ -1,8 +1,8 @@
-Summary: rcshist - display RCS change history
+Summary: display RCS change history
 %define AppProgram rcshist
 %define AppVersion 1.04
-%define AppRelease 20180325
-# $Id: rcshist.spec,v 1.3 2018/03/25 21:56:11 tom Exp $
+%define AppRelease 20190106
+# $Id: rcshist.spec,v 1.5 2019/01/06 22:59:15 tom Exp $
 Name: %{AppProgram}
 Version: %{AppVersion}
 Release: %{AppRelease}
@@ -27,11 +27,11 @@ reverse date order over all revisions of all files.
 %build
 
 INSTALL_PROGRAM='${INSTALL}' \
-	./configure \
-		--prefix=%{_prefix} \
-		--bindir=%{_bindir} \
-		--libdir=%{_libdir} \
-		--mandir=%{_mandir}
+%configure \
+	--prefix=%{_prefix} \
+	--bindir=%{_bindir} \
+	--libdir=%{_libdir} \
+	--mandir=%{_mandir}
 
 make
 
@@ -52,6 +52,9 @@ strip $RPM_BUILD_ROOT%{_bindir}/%{AppProgram}
 
 %changelog
 # each patch should add its ChangeLog entries here
+
+* Sun Jan 06 2019 Thomas Dickey
+- use "hardening" flags.
 
 * Sun Mar 25 2018 Thomas Dickey
 - update ftp url, disable debug-packages
