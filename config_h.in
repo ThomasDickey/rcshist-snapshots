@@ -2,7 +2,7 @@
  * config_h.in is a template file used by configure to produce config.h.
  * config_h is then transformed (by config.status) into the header file 
  * config.h.
- * $Header: /usr/build/VCS/rcshist/RCS/config_h.in,v 1.1 1994/07/11 22:56:20 tom Exp $
+ * $Id: config_h.in,v 1.2 2022/10/02 13:32:51 tom Exp $
  */
 
 @DEFS@

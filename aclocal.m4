@@ -1,7 +1,7 @@
-dnl $Id: aclocal.m4,v 1.5 2019/01/06 23:31:10 tom Exp $
+dnl $Id: aclocal.m4,v 1.6 2022/10/02 12:55:50 tom Exp $
 dnl Macros for rcshist configure script (Thomas E. Dickey)
 dnl ---------------------------------------------------------------------------
-dnl Copyright 2015-2018,2019 Thomas E. Dickey
+dnl Copyright 2015-2019,2022 Thomas E. Dickey
 dnl
 dnl Redistribution and use in source and binary forms, with or without
 dnl modification, are permitted provided that the following conditions
@@ -50,10 +50,11 @@ define([CF_ACVERSION_COMPARE],
 [ifelse([$8], , ,[$8])],
 [ifelse([$9], , ,[$9])])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_CFLAGS version: 13 updated: 2017/02/25 18:57:40
+dnl CF_ADD_CFLAGS version: 15 updated: 2020/12/31 10:54:15
 dnl -------------
 dnl Copy non-preprocessor flags to $CFLAGS, preprocessor flags to $CPPFLAGS
-dnl The second parameter if given makes this macro verbose.
+dnl $1 = flags to add
+dnl $2 = if given makes this macro verbose.
 dnl
 dnl Put any preprocessor definitions that use quoted strings in $EXTRA_CPPFLAGS,
 dnl to simplify use of $CPPFLAGS in compiler checks, etc., that are easily
@@ -67,19 +68,19 @@ cf_new_extra_cppflags=
 
 for cf_add_cflags in $1
 do
-case $cf_fix_cppflags in
+case "$cf_fix_cppflags" in
 (no)
-	case $cf_add_cflags in
+	case "$cf_add_cflags" in
 	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
-		case $cf_add_cflags in
+		case "$cf_add_cflags" in
 		(-D*)
-			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[[^=]]*='\''\"[[^"]]*//'`
+			cf_tst_cflags=`echo "${cf_add_cflags}" |sed -e 's/^-D[[^=]]*='\''\"[[^"]]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
 				&& test -z "${cf_tst_cflags}" \
 				&& cf_fix_cppflags=yes
 
-			if test $cf_fix_cppflags = yes ; then
+			if test "$cf_fix_cppflags" = yes ; then
 				CF_APPEND_TEXT(cf_new_extra_cppflags,$cf_add_cflags)
 				continue
 			elif test "${cf_tst_cflags}" = "\"'" ; then
@@ -92,7 +93,7 @@ case $cf_fix_cppflags in
 		(*$cf_add_cflags)
 			;;
 		(*)
-			case $cf_add_cflags in
+			case "$cf_add_cflags" in
 			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 				CF_REMOVE_DEFINE(CPPFLAGS,$CPPFLAGS,$cf_tst_cppflags)
@@ -110,7 +111,7 @@ case $cf_fix_cppflags in
 (yes)
 	CF_APPEND_TEXT(cf_new_extra_cppflags,$cf_add_cflags)
 
-	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[[^"]]*"'\''//'`
+	cf_tst_cflags=`echo "${cf_add_cflags}" |sed -e 's/^[[^"]]*"'\''//'`
 
 	test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
 		&& test -z "${cf_tst_cflags}" \
@@ -138,6 +139,25 @@ AC_SUBST(EXTRA_CPPFLAGS)
 
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_APPEND_CFLAGS version: 3 updated: 2021/09/05 17:25:40
+dnl ----------------
+dnl Use CF_ADD_CFLAGS after first checking for potential redefinitions.
+dnl $1 = flags to add
+dnl $2 = if given makes this macro verbose.
+define([CF_APPEND_CFLAGS],
+[
+for cf_add_cflags in $1
+do
+	case "x$cf_add_cflags" in
+	(x-[[DU]]*)
+		CF_REMOVE_CFLAGS($cf_add_cflags,CFLAGS,[$2])
+		CF_REMOVE_CFLAGS($cf_add_cflags,CPPFLAGS,[$2])
+		;;
+	esac
+	CF_ADD_CFLAGS([$cf_add_cflags],[$2])
+done
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_APPEND_TEXT version: 1 updated: 2017/02/25 18:58:55
 dnl --------------
 dnl use this macro for appending text without introducing an extra blank at
@@ -153,6 +173,12 @@ dnl --------------
 dnl Allow user to disable a normally-on option.
 AC_DEFUN([CF_ARG_DISABLE],
 [CF_ARG_OPTION($1,[$2],[$3],[$4],yes)])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_ARG_ENABLE version: 3 updated: 1999/03/30 17:24:31
+dnl -------------
+dnl Allow user to enable a normally-off option.
+AC_DEFUN([CF_ARG_ENABLE],
+[CF_ARG_OPTION($1,[$2],[$3],[$4],no)])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_ARG_OPTION version: 5 updated: 2015/05/10 19:52:14
 dnl -------------
@@ -177,7 +203,46 @@ ifelse([$3],,[    :]dnl
 ])dnl
 ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CC_ENV_FLAGS version: 9 updated: 2018/07/29 18:03:26
+dnl CF_C11_NORETURN version: 3 updated: 2021/03/28 11:36:23
+dnl ---------------
+AC_DEFUN([CF_C11_NORETURN],
+[
+AC_MSG_CHECKING(if you want to use C11 _Noreturn feature)
+CF_ARG_ENABLE(stdnoreturn,
+	[  --enable-stdnoreturn    enable C11 _Noreturn feature for diagnostics],
+	[enable_stdnoreturn=yes],
+	[enable_stdnoreturn=no])
+AC_MSG_RESULT($enable_stdnoreturn)
+
+if test $enable_stdnoreturn = yes; then
+AC_CACHE_CHECK([for C11 _Noreturn feature], cf_cv_c11_noreturn,
+	[AC_TRY_COMPILE([
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdnoreturn.h>
+static _Noreturn void giveup(void) { exit(0); }
+	],
+	[if (feof(stdin)) giveup()],
+	cf_cv_c11_noreturn=yes,
+	cf_cv_c11_noreturn=no)
+	])
+else
+	cf_cv_c11_noreturn=no,
+fi
+
+if test "$cf_cv_c11_noreturn" = yes; then
+	AC_DEFINE(HAVE_STDNORETURN_H, 1,[Define if <stdnoreturn.h> header is available and working])
+	AC_DEFINE_UNQUOTED(STDC_NORETURN,_Noreturn,[Define if C11 _Noreturn keyword is supported])
+	HAVE_STDNORETURN_H=1
+else
+	HAVE_STDNORETURN_H=0
+fi
+
+AC_SUBST(HAVE_STDNORETURN_H)
+AC_SUBST(STDC_NORETURN)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_CC_ENV_FLAGS version: 10 updated: 2020/12/31 18:40:20
 dnl ---------------
 dnl Check for user's environment-breakage by stuffing CFLAGS/CPPFLAGS content
 dnl into CC.  This will not help with broken scripts that wrap the compiler
@@ -192,7 +257,7 @@ dnl outweighs that limitation.
 AC_DEFUN([CF_CC_ENV_FLAGS],
 [
 # This should have been defined by AC_PROG_CC
-: ${CC:=cc}
+: "${CC:=cc}"
 
 AC_MSG_CHECKING(\$CFLAGS variable)
 case "x$CFLAGS" in
@@ -241,7 +306,7 @@ case "$CC" in
 esac
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CHECK_CACHE version: 12 updated: 2012/10/02 20:55:03
+dnl CF_CHECK_CACHE version: 13 updated: 2020/12/31 10:54:15
 dnl --------------
 dnl Check if we're accidentally using a cache from a different machine.
 dnl Derive the system name, as a check for reusing the autoconf cache.
@@ -255,7 +320,7 @@ dnl Note: we would use $ac_config_sub, but that is one of the places where
 dnl autoconf 2.5x broke compatibility with autoconf 2.13
 AC_DEFUN([CF_CHECK_CACHE],
 [
-if test -f $srcdir/config.guess || test -f $ac_aux_dir/config.guess ; then
+if test -f "$srcdir/config.guess" || test -f "$ac_aux_dir/config.guess" ; then
 	ifelse([$1],,[AC_CANONICAL_HOST],[$1])
 	system_name="$host_os"
 else
@@ -276,7 +341,7 @@ if test ".$system_name" != ".$cf_cv_system_name" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CLANG_COMPILER version: 2 updated: 2013/11/19 19:23:35
+dnl CF_CLANG_COMPILER version: 8 updated: 2021/01/01 13:31:04
 dnl -----------------
 dnl Check if the given compiler is really clang.  clang's C driver defines
 dnl __GNUC__ (fooling the configure script into setting $GCC to yes) but does
@@ -295,23 +360,58 @@ ifelse([$2],,CLANG_COMPILER,[$2])=no
 if test "$ifelse([$1],,[$1],GCC)" = yes ; then
 	AC_MSG_CHECKING(if this is really Clang ifelse([$1],GXX,C++,C) compiler)
 	cf_save_CFLAGS="$ifelse([$3],,CFLAGS,[$3])"
-	ifelse([$3],,CFLAGS,[$3])="$ifelse([$3],,CFLAGS,[$3]) -Qunused-arguments"
 	AC_TRY_COMPILE([],[
 #ifdef __clang__
 #else
 make an error
 #endif
 ],[ifelse([$2],,CLANG_COMPILER,[$2])=yes
-cf_save_CFLAGS="$cf_save_CFLAGS -Qunused-arguments"
 ],[])
 	ifelse([$3],,CFLAGS,[$3])="$cf_save_CFLAGS"
 	AC_MSG_RESULT($ifelse([$2],,CLANG_COMPILER,[$2]))
 fi
+
+CLANG_VERSION=none
+
+if test "x$ifelse([$2],,CLANG_COMPILER,[$2])" = "xyes" ; then
+	case "$CC" in
+	(c[[1-9]][[0-9]]|*/c[[1-9]][[0-9]])
+		AC_MSG_WARN(replacing broken compiler alias $CC)
+		CFLAGS="$CFLAGS -std=`echo "$CC" | sed -e 's%.*/%%'`"
+		CC=clang
+		;;
+	esac
+
+	AC_MSG_CHECKING(version of $CC)
+	CLANG_VERSION="`$CC --version 2>/dev/null | sed -e '2,$d' -e 's/^.*(CLANG[[^)]]*) //' -e 's/^.*(Debian[[^)]]*) //' -e 's/^[[^0-9.]]*//' -e 's/[[^0-9.]].*//'`"
+	test -z "$CLANG_VERSION" && CLANG_VERSION=unknown
+	AC_MSG_RESULT($CLANG_VERSION)
+
+	for cf_clang_opt in \
+		-Qunused-arguments \
+		-Wno-error=implicit-function-declaration
+	do
+		AC_MSG_CHECKING(if option $cf_clang_opt works)
+		cf_save_CFLAGS="$CFLAGS"
+		CFLAGS="$CFLAGS $cf_clang_opt"
+		AC_TRY_LINK([
+			#include <stdio.h>],[
+			printf("hello!\\n");],[
+			cf_clang_optok=yes],[
+			cf_clang_optok=no])
+		AC_MSG_RESULT($cf_clang_optok)
+		CFLAGS="$cf_save_CFLAGS"
+		if test "$cf_clang_optok" = yes; then
+			CF_VERBOSE(adding option $cf_clang_opt)
+			CF_APPEND_TEXT(CFLAGS,$cf_clang_opt)
+		fi
+	done
+fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_DISABLE_ECHO version: 13 updated: 2015/04/18 08:56:57
+dnl CF_DISABLE_ECHO version: 14 updated: 2021/09/04 06:35:04
 dnl ---------------
-dnl You can always use "make -n" to see the actual options, but it's hard to
+dnl You can always use "make -n" to see the actual options, but it is hard to
 dnl pick out/analyze warning messages when the compile-line is long.
 dnl
 dnl Sets:
@@ -346,7 +446,7 @@ AC_SUBST(SHOW_CC)
 AC_SUBST(ECHO_CC)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_DISABLE_LEAKS version: 7 updated: 2012/10/02 20:55:03
+dnl CF_DISABLE_LEAKS version: 9 updated: 2021/04/03 16:41:50
 dnl ----------------
 dnl Combine no-leak checks with the libraries or tools that are used for the
 dnl checks.
@@ -359,24 +459,28 @@ AC_REQUIRE([CF_WITH_VALGRIND])
 AC_MSG_CHECKING(if you want to perform memory-leak testing)
 AC_ARG_ENABLE(leaks,
 	[  --disable-leaks         test: free permanent memory, analyze leaks],
-	[if test "x$enableval" = xno; then with_no_leaks=yes; else with_no_leaks=no; fi],
-	: ${with_no_leaks:=no})
+	[enable_leaks=$enableval],
+	[enable_leaks=yes])
+dnl with_no_leaks is more readable...
+if test "x$enable_leaks" = xno; then with_no_leaks=yes; else with_no_leaks=no; fi
 AC_MSG_RESULT($with_no_leaks)
 
-if test "$with_no_leaks" = yes ; then
+if test "$enable_leaks" = no ; then
 	AC_DEFINE(NO_LEAKS,1,[Define to 1 if you want to perform memory-leak testing.])
 	AC_DEFINE(YY_NO_LEAKS,1,[Define to 1 if you want to perform memory-leak testing.])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_ATTRIBUTES version: 17 updated: 2015/04/12 15:39:00
+dnl CF_GCC_ATTRIBUTES version: 24 updated: 2021/03/20 12:00:25
 dnl -----------------
 dnl Test for availability of useful gcc __attribute__ directives to quiet
 dnl compiler warnings.  Though useful, not all are supported -- and contrary
 dnl to documentation, unrecognized directives cause older compilers to barf.
 AC_DEFUN([CF_GCC_ATTRIBUTES],
-[
-if test "$GCC" = yes
+[AC_REQUIRE([AC_PROG_FGREP])dnl
+AC_REQUIRE([CF_C11_NORETURN])dnl
+
+if test "$GCC" = yes || test "$GXX" = yes
 then
 cat > conftest.i <<EOF
 #ifndef GCC_PRINTF
@@ -395,7 +499,7 @@ EOF
 if test "$GCC" = yes
 then
 	AC_CHECKING([for $CC __attribute__ directives])
-cat > conftest.$ac_ext <<EOF
+cat > "conftest.$ac_ext" <<EOF
 #line __oline__ "${as_me:-configure}"
 #include "confdefs.h"
 #include "conftest.h"
@@ -411,9 +515,9 @@ cat > conftest.$ac_ext <<EOF
 #define GCC_SCANFLIKE(fmt,var)  /*nothing*/
 #endif
 extern void wow(char *,...) GCC_SCANFLIKE(1,2);
-extern void oops(char *,...) GCC_PRINTFLIKE(1,2) GCC_NORETURN;
-extern void foo(void) GCC_NORETURN;
-int main(int argc GCC_UNUSED, char *argv[[]] GCC_UNUSED) { return 0; }
+extern GCC_NORETURN void oops(char *,...) GCC_PRINTFLIKE(1,2);
+extern GCC_NORETURN void foo(void);
+int main(int argc GCC_UNUSED, char *argv[[]] GCC_UNUSED) { (void)argc; (void)argv; return 0; }
 EOF
 	cf_printf_attribute=no
 	cf_scanf_attribute=no
@@ -423,7 +527,7 @@ EOF
 		cf_directive="__attribute__(($cf_attribute))"
 		echo "checking for $CC $cf_directive" 1>&AC_FD_CC
 
-		case $cf_attribute in
+		case "$cf_attribute" in
 		(printf)
 			cf_printf_attribute=yes
 			cat >conftest.h <<EOF
@@ -446,7 +550,7 @@ EOF
 		if AC_TRY_EVAL(ac_compile); then
 			test -n "$verbose" && AC_MSG_RESULT(... $cf_attribute)
 			cat conftest.h >>confdefs.h
-			case $cf_attribute in
+			case "$cf_attribute" in
 			(noreturn)
 				AC_DEFINE_UNQUOTED(GCC_NORETURN,$cf_directive,[Define to noreturn-attribute for gcc])
 				;;
@@ -473,15 +577,16 @@ EOF
 		fi
 	done
 else
-	fgrep define conftest.i >>confdefs.h
+	${FGREP-fgrep} define conftest.i >>confdefs.h
 fi
-rm -rf conftest*
+rm -rf ./conftest*
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_VERSION version: 7 updated: 2012/10/18 06:46:33
+dnl CF_GCC_VERSION version: 8 updated: 2019/09/07 13:38:36
 dnl --------------
-dnl Find version of gcc
+dnl Find version of gcc, and (because icc/clang pretend to be gcc without being
+dnl compatible), attempt to determine if icc/clang is actually used.
 AC_DEFUN([CF_GCC_VERSION],[
 AC_REQUIRE([AC_PROG_CC])
 GCC_VERSION=none
@@ -491,14 +596,17 @@ if test "$GCC" = yes ; then
 	test -z "$GCC_VERSION" && GCC_VERSION=unknown
 	AC_MSG_RESULT($GCC_VERSION)
 fi
+CF_INTEL_COMPILER(GCC,INTEL_COMPILER,CFLAGS)
+CF_CLANG_COMPILER(GCC,CLANG_COMPILER,CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 33 updated: 2018/06/20 20:23:13
+dnl CF_GCC_WARNINGS version: 41 updated: 2021/01/01 16:53:59
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
 dnl
 dnl	-Wconversion (useful in older versions of gcc, but not in gcc 2.7.x)
+dnl	-Winline (usually not worthwhile)
 dnl	-Wredundant-decls (system headers make this too noisy)
 dnl	-Wtraditional (combines too many unrelated messages, only a few useful)
 dnl	-Wwrite-strings (too noisy, but should review occasionally).  This
@@ -515,14 +623,11 @@ dnl
 AC_DEFUN([CF_GCC_WARNINGS],
 [
 AC_REQUIRE([CF_GCC_VERSION])
-CF_INTEL_COMPILER(GCC,INTEL_COMPILER,CFLAGS)
-CF_CLANG_COMPILER(GCC,CLANG_COMPILER,CFLAGS)
-
-cat > conftest.$ac_ext <<EOF
+if test "x$have_x" = xyes; then CF_CONST_X_STRING fi
+cat > "conftest.$ac_ext" <<EOF
 #line __oline__ "${as_me:-configure}"
 int main(int argc, char *argv[[]]) { return (argv[[argc-1]] == 0) ; }
 EOF
-
 if test "$INTEL_COMPILER" = yes
 then
 # The "-wdXXX" options suppress warnings:
@@ -538,7 +643,7 @@ then
 
 	AC_CHECKING([for $CC warning options])
 	cf_save_CFLAGS="$CFLAGS"
-	EXTRA_CFLAGS="-Wall"
+	EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall"
 	for cf_opt in \
 		wd1419 \
 		wd1683 \
@@ -557,12 +662,10 @@ then
 		fi
 	done
 	CFLAGS="$cf_save_CFLAGS"
-
-elif test "$GCC" = yes
+elif test "$GCC" = yes && test "$GCC_VERSION" != "unknown"
 then
 	AC_CHECKING([for $CC warning options])
 	cf_save_CFLAGS="$CFLAGS"
-	EXTRA_CFLAGS=
 	cf_warn_CONST=""
 	test "$with_ext_const" = yes && cf_warn_CONST="Wwrite-strings"
 	cf_gcc_warnings="Wignored-qualifiers Wlogical-op Wvarargs"
@@ -580,24 +683,21 @@ then
 		Wpointer-arith \
 		Wshadow \
 		Wstrict-prototypes \
-		Wundef $cf_gcc_warnings $cf_warn_CONST $1
+		Wundef Wno-inline $cf_gcc_warnings $cf_warn_CONST $1
 	do
 		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
 		if AC_TRY_EVAL(ac_compile); then
 			test -n "$verbose" && AC_MSG_RESULT(... -$cf_opt)
-			case $cf_opt in
-			(Wcast-qual)
-				CF_APPEND_TEXT(CPPFLAGS,-DXTSTRINGDEFINES)
-				;;
+			case "$cf_opt" in
 			(Winline)
-				case $GCC_VERSION in
+				case "$GCC_VERSION" in
 				([[34]].*)
 					CF_VERBOSE(feature is broken in gcc $GCC_VERSION)
 					continue;;
 				esac
 				;;
 			(Wpointer-arith)
-				case $GCC_VERSION in
+				case "$GCC_VERSION" in
 				([[12]].*)
 					CF_VERBOSE(feature is broken in gcc $GCC_VERSION)
 					continue;;
@@ -609,7 +709,7 @@ then
 	done
 	CFLAGS="$cf_save_CFLAGS"
 fi
-rm -rf conftest*
+rm -rf ./conftest*
 
 AC_SUBST(EXTRA_CFLAGS)
 ])dnl
@@ -725,7 +825,7 @@ if test x$cf_cv_gnu_library = xyes; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_INTEL_COMPILER version: 7 updated: 2015/04/12 15:39:00
+dnl CF_INTEL_COMPILER version: 8 updated: 2021/01/01 16:53:59
 dnl -----------------
 dnl Check if the given compiler is really the Intel compiler for Linux.  It
 dnl tries to imitate gcc, but does not return an error when it finds a mismatch
@@ -743,7 +843,7 @@ AC_REQUIRE([AC_CANONICAL_HOST])
 ifelse([$2],,INTEL_COMPILER,[$2])=no
 
 if test "$ifelse([$1],,[$1],GCC)" = yes ; then
-	case $host_os in
+	case "$host_os" in
 	(linux*|gnu*)
 		AC_MSG_CHECKING(if this is really Intel ifelse([$1],GXX,C++,C) compiler)
 		cf_save_CFLAGS="$ifelse([$3],,CFLAGS,[$3])"
@@ -763,7 +863,7 @@ cf_save_CFLAGS="$cf_save_CFLAGS -we147"
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_MAKE_DOCS version: 4 updated: 2015/07/04 21:43:03
+dnl CF_MAKE_DOCS version: 5 updated: 2021/01/10 16:05:11
 dnl ------------
 dnl $1 = name(s) to generate rules for
 dnl $2 = suffix of corresponding manpages used as input.
@@ -792,7 +892,7 @@ ${GROFF_NOTE}.$2.ps :
 ${GROFF_NOTE}	[\$](SHELL) -c "tbl [\$]*.$2 | groff -man" >[\$]@
 ${GROFF_NOTE}
 ${GROFF_NOTE}.$2.txt :
-${GROFF_NOTE}	GROFF_NO_SGR=stupid [\$](SHELL) -c "tbl [\$]*.$2 | nroff -Tascii -man | col -bx" >[\$]@
+${GROFF_NOTE}	GROFF_NO_SGR=stupid [\$](SHELL) -c "tbl [\$]*.$2 | nroff -rHY=0 -Tascii -man | col -bx" >[\$]@
 
 ${MAN2HTML_NOTE}.$2.html :
 ${MAN2HTML_NOTE}	./${MAN2HTML_TEMP} [\$]* $2 man >[\$]@
@@ -865,7 +965,7 @@ AC_SUBST(MAKE_UPPER_TAGS)
 AC_SUBST(MAKE_LOWER_TAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_MIXEDCASE_FILENAMES version: 7 updated: 2015/04/12 15:39:00
+dnl CF_MIXEDCASE_FILENAMES version: 9 updated: 2021/01/01 16:53:59
 dnl ----------------------
 dnl Check if the file-system supports mixed-case filenames.  If we're able to
 dnl create a lowercase name and see it as uppercase, it doesn't support that.
@@ -873,8 +973,8 @@ AC_DEFUN([CF_MIXEDCASE_FILENAMES],
 [
 AC_CACHE_CHECK(if filesystem supports mixed-case filenames,cf_cv_mixedcase,[
 if test "$cross_compiling" = yes ; then
-	case $target_alias in
-	(*-os2-emx*|*-msdosdjgpp*|*-cygwin*|*-msys*|*-mingw*|*-uwin*)
+	case "$target_alias" in
+	(*-os2-emx*|*-msdosdjgpp*|*-cygwin*|*-msys*|*-mingw*|*-uwin*|darwin*)
 		cf_cv_mixedcase=no
 		;;
 	(*)
@@ -903,23 +1003,33 @@ AC_DEFUN([CF_MSG_LOG],[
 echo "${as_me:-configure}:__oline__: testing $* ..." 1>&AC_FD_CC
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_NO_LEAKS_OPTION version: 6 updated: 2015/04/12 15:39:00
+dnl CF_NO_LEAKS_OPTION version: 9 updated: 2021/06/13 19:45:41
 dnl ------------------
 dnl see CF_WITH_NO_LEAKS
+dnl
+dnl $1 = option/name
+dnl $2 = help-text
+dnl $3 = symbol to define if the option is set
+dnl $4 = additional actions to take if the option is set
 AC_DEFUN([CF_NO_LEAKS_OPTION],[
 AC_MSG_CHECKING(if you want to use $1 for testing)
 AC_ARG_WITH($1,
 	[$2],
-	[AC_DEFINE_UNQUOTED($3,1,"Define to 1 if you want to use $1 for testing.")ifelse([$4],,[
+	[case "x$withval" in
+	(x|xno) ;;
+	(*)
+		: "${with_cflags:=-g}"
+		: "${enable_leaks:=no}"
+		with_$1=yes
+		AC_DEFINE_UNQUOTED($3,1,"Define to 1 if you want to use $1 for testing.")ifelse([$4],,[
 	 $4
 ])
-	: ${with_cflags:=-g}
-	: ${with_no_leaks:=yes}
-	 with_$1=yes],
+		;;
+	esac],
 	[with_$1=])
 AC_MSG_RESULT(${with_$1:-no})
 
-case .$with_cflags in
+case ".$with_cflags" in
 (.*-g*)
 	case .$CFLAGS in
 	(.*-g*)
@@ -932,7 +1042,7 @@ case .$with_cflags in
 esac
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PATH_SYNTAX version: 16 updated: 2015/04/18 08:56:57
+dnl CF_PATH_SYNTAX version: 18 updated: 2020/12/31 18:40:20
 dnl --------------
 dnl Check the argument to see that it looks like a pathname.  Rewrite it if it
 dnl begins with one of the prefix/exec_prefix variables, and then again if the
@@ -952,16 +1062,16 @@ case ".[$]$1" in
 	;;
 (.[[a-zA-Z]]:[[\\/]]*) # OS/2 EMX
 	;;
-(.\[$]{*prefix}*|.\[$]{*dir}*)
+(.\[$]\{*prefix\}*|.\[$]\{*dir\}*)
 	eval $1="[$]$1"
 	case ".[$]$1" in
 	(.NONE/*)
-		$1=`echo [$]$1 | sed -e s%NONE%$cf_path_syntax%`
+		$1=`echo "[$]$1" | sed -e s%NONE%$cf_path_syntax%`
 		;;
 	esac
 	;;
 (.no|.NONE/*)
-	$1=`echo [$]$1 | sed -e s%NONE%$cf_path_syntax%`
+	$1=`echo "[$]$1" | sed -e s%NONE%$cf_path_syntax%`
 	;;
 (*)
 	ifelse([$2],,[AC_MSG_ERROR([expected a pathname, not \"[$]$1\"])],$2)
@@ -1075,11 +1185,15 @@ AC_TRY_COMPILE([#include <stdio.h>],[
 ])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PROG_CC version: 4 updated: 2014/07/12 18:57:58
+dnl CF_PROG_CC version: 5 updated: 2019/12/31 08:53:54
 dnl ----------
 dnl standard check for CC, plus followup sanity checks
 dnl $1 = optional parameter to pass to AC_PROG_CC to specify compiler name
 AC_DEFUN([CF_PROG_CC],[
+CF_ACVERSION_CHECK(2.53,
+	[AC_MSG_WARN(this will incorrectly handle gnatgcc choice)
+	 AC_REQUIRE([AC_PROG_CC])],
+	[])
 ifelse($1,,[AC_PROG_CC],[AC_PROG_CC($1)])
 CF_GCC_VERSION
 CF_ACVERSION_CHECK(2.52,
@@ -1108,12 +1222,36 @@ AC_SUBST(GROFF_NOTE)
 AC_SUBST(NROFF_NOTE)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PROG_LINT version: 3 updated: 2016/05/22 15:25:54
+dnl CF_PROG_LINT version: 5 updated: 2022/08/20 15:44:13
 dnl ------------
 AC_DEFUN([CF_PROG_LINT],
 [
 AC_CHECK_PROGS(LINT, lint cppcheck splint)
+case "x$LINT" in
+(xcppcheck|x*/cppcheck)
+	test -z "$LINT_OPTS" && LINT_OPTS="--enable=all"
+	;;
+esac
 AC_SUBST(LINT_OPTS)
+AC_SUBST(LINT_LIBS)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_REMOVE_CFLAGS version: 3 updated: 2021/09/05 17:25:40
+dnl ----------------
+dnl Remove a given option from CFLAGS/CPPFLAGS
+dnl $1 = option to remove
+dnl $2 = variable to update
+dnl $3 = nonempty to allow verbose message
+define([CF_REMOVE_CFLAGS],
+[
+cf_tmp_cflag=`echo "x$1" | sed -e 's/^.//' -e 's/=.*//'`
+while true
+do
+	cf_old_cflag=`echo "x[$]$2" | sed -e 's/^.//' -e 's/[[ 	]][[ 	]]*-/ -/g' -e "s%$cf_tmp_cflag\\(=[[^ 	]][[^ 	]]*\\)\?%%" -e 's/^[[ 	]]*//' -e 's%[[ ]][[ ]]*-D% -D%g' -e 's%[[ ]][[ ]]*-I% -I%g'`
+	test "[$]$2" != "$cf_old_cflag" || break
+	ifelse([$3],,,[CF_VERBOSE(removing old option $1 from $2)])
+	$2="$cf_old_cflag"
+done
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_REMOVE_DEFINE version: 3 updated: 2010/01/09 11:05:50
@@ -1133,34 +1271,20 @@ $1=`echo "$2" | \
 		-e 's/-[[UD]]'"$3"'\(=[[^ 	]]*\)\?[$]//g'`
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_TRY_XOPEN_SOURCE version: 2 updated: 2018/06/20 20:23:13
+dnl CF_TRY_XOPEN_SOURCE version: 4 updated: 2022/09/10 15:16:16
 dnl -------------------
 dnl If _XOPEN_SOURCE is not defined in the compile environment, check if we
 dnl can define it successfully.
 AC_DEFUN([CF_TRY_XOPEN_SOURCE],[
 AC_CACHE_CHECK(if we should define _XOPEN_SOURCE,cf_cv_xopen_source,[
-	AC_TRY_COMPILE([
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-],[
-#ifndef _XOPEN_SOURCE
-make an error
-#endif],
+	AC_TRY_COMPILE(CF__XOPEN_SOURCE_HEAD,CF__XOPEN_SOURCE_BODY,
 	[cf_cv_xopen_source=no],
 	[cf_save="$CPPFLAGS"
 	 CF_APPEND_TEXT(CPPFLAGS,-D_XOPEN_SOURCE=$cf_XOPEN_SOURCE)
-	 AC_TRY_COMPILE([
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-],[
-#ifdef _XOPEN_SOURCE
-make an error
-#endif],
-	[cf_cv_xopen_source=no],
-	[cf_cv_xopen_source=$cf_XOPEN_SOURCE])
-	CPPFLAGS="$cf_save"
+	 AC_TRY_COMPILE(CF__XOPEN_SOURCE_HEAD,CF__XOPEN_SOURCE_BODY,
+		[cf_cv_xopen_source=no],
+		[cf_cv_xopen_source=$cf_XOPEN_SOURCE])
+		CPPFLAGS="$cf_save"
 	])
 ])
 
@@ -1168,7 +1292,7 @@ if test "$cf_cv_xopen_source" != no ; then
 	CF_REMOVE_DEFINE(CFLAGS,$CFLAGS,_XOPEN_SOURCE)
 	CF_REMOVE_DEFINE(CPPFLAGS,$CPPFLAGS,_XOPEN_SOURCE)
 	cf_temp_xopen_source="-D_XOPEN_SOURCE=$cf_cv_xopen_source"
-	CF_ADD_CFLAGS($cf_temp_xopen_source)
+	CF_APPEND_CFLAGS($cf_temp_xopen_source)
 fi
 ])
 dnl ---------------------------------------------------------------------------
@@ -1188,6 +1312,19 @@ AC_DEFUN([CF_VERBOSE],
 [test -n "$verbose" && echo "	$1" 1>&AC_FD_MSG
 CF_MSG_LOG([$1])
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITHOUT_X version: 3 updated: 2021/01/13 16:51:52
+dnl ------------
+dnl Use this to cancel the check for X headers/libraries which would be pulled
+dnl in via CF_GCC_WARNINGS.
+define([CF_WITHOUT_X],
+AC_DEFUN([AC_PATH_XTRA],[])
+AC_DEFUN([CF_SAVE_XTRA_FLAGS],[])
+AC_DEFUN([CF_RESTORE_XTRA_FLAGS],[])
+AC_DEFUN([CF_CONST_X_STRING],[echo "skipping X-const check";])dnl
+AC_SUBST(X_CFLAGS)
+AC_SUBST(X_LIBS)
+[])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_DBMALLOC version: 7 updated: 2010/06/21 17:26:47
 dnl ----------------
@@ -1219,7 +1356,7 @@ if test "$with_dmalloc" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_MAN2HTML version: 8 updated: 2018/06/27 18:44:03
+dnl CF_WITH_MAN2HTML version: 12 updated: 2021/01/03 18:30:50
 dnl ----------------
 dnl Check for man2html and groff.  Prefer man2html over groff, but use groff
 dnl as a fallback.  See
@@ -1232,7 +1369,8 @@ dnl We name that "man2html.tmp".
 dnl
 dnl The shell script can be removed later, e.g., using "make distclean".
 AC_DEFUN([CF_WITH_MAN2HTML],[
-AC_REQUIRE([CF_PROG_GROFF])
+AC_REQUIRE([CF_PROG_GROFF])dnl
+AC_REQUIRE([AC_PROG_FGREP])dnl
 
 case "x${with_man2html}" in
 (xno)
@@ -1305,6 +1443,7 @@ export GROFF_NO_SGR
 
 CF_EOF
 
+NROFF_OPTS=
 if test "x$cf_with_groff" = xyes
 then
 	MAN2HTML_NOTE="$GROFF_NOTE"
@@ -1313,6 +1452,16 @@ then
 $SHELL -c "$TBL_PATH \${ROOT}.\${TYPE} | $GROFF_PATH -P -o0 -I\${ROOT}_ -Thtml -\${MACS}"
 CF_EOF
 else
+	# disable hyphenation if this is groff
+	if test "x$GROFF_PATH" != xno
+	then
+		AC_MSG_CHECKING(if nroff is really groff)
+		cf_check_groff="`$NROFF_PATH --version 2>/dev/null | grep groff`"
+		test -n "$cf_check_groff" && cf_check_groff=yes
+		test -n "$cf_check_groff" || cf_check_groff=no
+		AC_MSG_RESULT($cf_check_groff)
+		test "x$cf_check_groff" = xyes && NROFF_OPTS="-rHY=0"
+	fi
 	MAN2HTML_NOTE=""
 	CF_PATH_SYNTAX(cf_man2html)
 	MAN2HTML_PATH="$cf_man2html"
@@ -1327,10 +1476,10 @@ CF_EOF
 
 	LC_ALL=C LC_CTYPE=C LANG=C LANGUAGE=C $NROFF_PATH -man conftest.in >conftest.out
 
-	cf_man2html_1st=`fgrep -n MARKER conftest.out |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`
-	cf_man2html_top=`expr $cf_man2html_1st - 2`
-	cf_man2html_bot=`wc -l conftest.out |sed -e 's/[[^0-9]]//g'`
-	cf_man2html_bot=`expr $cf_man2html_bot - 2 - $cf_man2html_top`
+	cf_man2html_1st="`${FGREP-fgrep} -n MARKER conftest.out |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`"
+	cf_man2html_top=`expr "$cf_man2html_1st" - 2`
+	cf_man2html_bot="`wc -l conftest.out |sed -e 's/[[^0-9]]//g'`"
+	cf_man2html_bot=`expr "$cf_man2html_bot" - 2 - "$cf_man2html_top"`
 	cf_man2html_top_bot="-topm=$cf_man2html_top -botm=$cf_man2html_bot"
 
 	AC_MSG_RESULT($cf_man2html_top_bot)
@@ -1354,7 +1503,7 @@ CF_EOF
 	done
 
 	LC_ALL=C LC_CTYPE=C LANG=C LANGUAGE=C $NROFF_PATH -man conftest.in >conftest.out
-	cf_man2html_page=`fgrep -n HEAD1 conftest.out |sed -n '$p' |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`
+	cf_man2html_page="`${FGREP-fgrep} -n HEAD1 conftest.out |sed -n '$p' |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`"
 	test -z "$cf_man2html_page" && cf_man2html_page=99999
 	test "$cf_man2html_page" -gt 100 && cf_man2html_page=99999
 
@@ -1363,13 +1512,13 @@ CF_EOF
 
 	cat >>$MAN2HTML_TEMP <<CF_EOF
 : \${MAN2HTML_PATH=$MAN2HTML_PATH}
-MAN2HTML_OPTS="\$MAN2HTML_OPTS -index -title="\$ROOT\(\$TYPE\)" -compress -pgsize $cf_man2html_page"
+MAN2HTML_OPTS="\$MAN2HTML_OPTS -index -title=\"\$ROOT(\$TYPE)\" -compress -pgsize $cf_man2html_page"
 case \${TYPE} in
 (ms)
-	$TBL_PATH \${ROOT}.\${TYPE} | $NROFF_PATH -\${MACS} | \$MAN2HTML_PATH -topm=0 -botm=0 \$MAN2HTML_OPTS
+	$TBL_PATH \${ROOT}.\${TYPE} | $NROFF_PATH $NROFF_OPTS -\${MACS} | \$MAN2HTML_PATH -topm=0 -botm=0 \$MAN2HTML_OPTS
 	;;
 (*)
-	$TBL_PATH \${ROOT}.\${TYPE} | $NROFF_PATH -\${MACS} | \$MAN2HTML_PATH $cf_man2html_top_bot \$MAN2HTML_OPTS
+	$TBL_PATH \${ROOT}.\${TYPE} | $NROFF_PATH $NROFF_OPTS -\${MACS} | \$MAN2HTML_PATH $cf_man2html_top_bot \$MAN2HTML_OPTS
 	;;
 esac
 CF_EOF
@@ -1413,7 +1562,7 @@ fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 55 updated: 2018/12/31 20:46:17
+dnl CF_XOPEN_SOURCE version: 61 updated: 2022/09/30 04:05:55
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -1432,7 +1581,7 @@ cf_XOPEN_SOURCE=ifelse([$1],,500,[$1])
 cf_POSIX_C_SOURCE=ifelse([$2],,199506L,[$2])
 cf_xopen_source=
 
-case $host_os in
+case "$host_os" in
 (aix[[4-7]]*)
 	cf_xopen_source="-D_ALL_SOURCE"
 	;;
@@ -1464,7 +1613,7 @@ case $host_os in
 	cf_xopen_source="-D_SGI_SOURCE"
 	cf_XOPEN_SOURCE=
 	;;
-(linux*|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin)
+(linux*gnu|linux*gnueabi|linux*gnueabihf|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin)
 	CF_GNU_SOURCE($cf_XOPEN_SOURCE)
 	;;
 (minix*)
@@ -1478,7 +1627,15 @@ case $host_os in
 (netbsd*)
 	cf_xopen_source="-D_NETBSD_SOURCE" # setting _XOPEN_SOURCE breaks IPv6 for lynx on NetBSD 1.6, breaks xterm, is not needed for ncursesw
 	;;
-(openbsd[[4-9]]*)
+(openbsd[[6-9]]*)
+	# OpenBSD 6.x has broken locale support, both compile-time and runtime.
+	# see https://www.mail-archive.com/bugs@openbsd.org/msg13200.html
+	# Abusing the conformance level is a workaround.
+	AC_MSG_WARN(this system does not provide usable locale support)
+	cf_xopen_source="-D_BSD_SOURCE"
+	cf_XOPEN_SOURCE=700
+	;;
+(openbsd[[4-5]]*)
 	# setting _XOPEN_SOURCE lower than 500 breaks g++ compile with wchar.h, needed for ncursesw
 	cf_xopen_source="-D_BSD_SOURCE"
 	cf_XOPEN_SOURCE=600
@@ -1505,12 +1662,18 @@ case $host_os in
 	;;
 (*)
 	CF_TRY_XOPEN_SOURCE
+	cf_save_xopen_cppflags="$CPPFLAGS"
 	CF_POSIX_C_SOURCE($cf_POSIX_C_SOURCE)
+	# Some of these niche implementations use copy/paste, double-check...
+	CF_VERBOSE(checking if _POSIX_C_SOURCE inteferes)
+	AC_TRY_COMPILE(CF__XOPEN_SOURCE_HEAD,CF__XOPEN_SOURCE_BODY,,[
+		AC_MSG_WARN(_POSIX_C_SOURCE definition is not usable)
+		CPPFLAGS="$cf_save_xopen_cppflags"])
 	;;
 esac
 
 if test -n "$cf_xopen_source" ; then
-	CF_ADD_CFLAGS($cf_xopen_source,true)
+	CF_APPEND_CFLAGS($cf_xopen_source,true)
 fi
 
 dnl In anything but the default case, we may have system-specific setting
@@ -1525,7 +1688,7 @@ make an error
 	[cf_XOPEN_SOURCE_set=yes],
 	[cf_XOPEN_SOURCE_set=no])
 	AC_MSG_RESULT($cf_XOPEN_SOURCE_set)
-	if test $cf_XOPEN_SOURCE_set = yes
+	if test "$cf_XOPEN_SOURCE_set" = yes
 	then
 		AC_TRY_COMPILE([#include <stdlib.h>],[
 #if (_XOPEN_SOURCE - 0) < $cf_XOPEN_SOURCE
@@ -1533,7 +1696,7 @@ make an error
 #endif],
 		[cf_XOPEN_SOURCE_set_ok=yes],
 		[cf_XOPEN_SOURCE_set_ok=no])
-		if test $cf_XOPEN_SOURCE_set_ok = no
+		if test "$cf_XOPEN_SOURCE_set_ok" = no
 		then
 			AC_MSG_WARN(_XOPEN_SOURCE is lower than requested)
 		fi
@@ -1542,4 +1705,24 @@ make an error
 	fi
 fi
 fi # cf_cv_posix_visible
+])
+dnl ---------------------------------------------------------------------------
+dnl CF__XOPEN_SOURCE_BODY version: 1 updated: 2022/09/10 15:17:35
+dnl ---------------------
+dnl body of test when test-compiling for _XOPEN_SOURCE check
+define([CF__XOPEN_SOURCE_BODY],
+[
+#ifndef _XOPEN_SOURCE
+make an error
+#endif
+])
+dnl ---------------------------------------------------------------------------
+dnl CF__XOPEN_SOURCE_HEAD version: 1 updated: 2022/09/10 15:17:03
+dnl ---------------------
+dnl headers to include when test-compiling for _XOPEN_SOURCE check
+define([CF__XOPEN_SOURCE_HEAD],
+[
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
 ])
