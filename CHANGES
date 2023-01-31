@@ -1,3 +1,17 @@
+2023-01-30  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* package/debian/copyright, package/debian/changelog,
+	  package/rcshist.spec:
+	bump
+
+2023-01-29  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* aclocal.m4: resync with my-autoconf
+
+	* COPYING: bump
+
+	* configure: regen
+
 2022-10-02  Thomas E. Dickey  <dickey@invisible-island.net>
 
 	* config_h.in: s/Header/Id/
@@ -108,7 +122,7 @@
 
 	* package/rcshist.spec, package/debian/rules, package/debian/copyright,
 	  package/debian/control, package/debian/changelog, makefile.in,
-	  configure.in:
+	  configure, aclocal.m4, configure.in:
 	RCS_BASE
 
 2014-10-06  Thomas E. Dickey  <dickey@invisible-island.net>
@@ -126,7 +140,7 @@
 2010-04-20  Thomas E. Dickey  <dickey@invisible-island.net>
 
 	* package/debian/compat, package/debian/docs, package/debian/postinst,
-	  package/debian/watch:
+	  package/debian/prerm, package/debian/watch:
 	RCS_BASE
 
 2005-02-07  iedowse
