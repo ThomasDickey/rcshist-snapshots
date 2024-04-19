@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: namedobjlist.c,v 1.6 2015/03/01 17:04:37 tom Exp $
+ * $Id: namedobjlist.c,v 1.7 2024/04/19 20:39:31 tom Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,7 +69,7 @@ nol_rehash(Namedobjlist *self, int log2hs) {
 }
 	
 Namedobjlist *
-namedobjlist_create() {
+namedobjlist_create(void) {
 	Namedobjlist *nol = malloc(sizeof(*nol));
 
 	TAILQ_INIT(&nol->all);

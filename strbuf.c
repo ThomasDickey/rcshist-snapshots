@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: strbuf.c,v 1.5 2018/03/25 22:33:42 tom Exp $
+ * $Id: strbuf.c,v 1.6 2024/04/19 20:37:54 tom Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,7 +36,7 @@
 #define STRBUF_MIN 10
 static void sb_pullupto(struct strbuf *sb, int len);
 
-struct strbuf *sb_create() {
+struct strbuf *sb_create(void) {
 	struct strbuf *sb = malloc(sizeof(*sb));
 
 	sb->buf = NULL;

@@ -30,7 +30,7 @@
 #include "misc.h"
 
 struct textlist *
-textlist_create() {
+textlist_create(void) {
 	struct textlist *tlp;
 
 	tlp = malloc(sizeof(*tlp));

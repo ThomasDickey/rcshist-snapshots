@@ -1,3 +1,25 @@
+2024-04-19  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* package/debian/changelog, package/rcshist.spec: bump
+
+	* namedobjlist.c, rcshist.c, strbuf.c, rcsfile.c, misc.c: standard-C
+
+	* package/debian/copyright, COPYING: bump
+
+	* configure: regen
+
+2023-12-27  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* config.sub: 2023-12-27
+
+2023-12-02  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* config.guess: 2023-12-02
+
+2023-11-23  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* aclocal.m4: resync with my-autoconf
+
 2023-01-30  Thomas E. Dickey  <dickey@invisible-island.net>
 
 	* package/debian/copyright, package/debian/changelog,

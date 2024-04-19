@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: rcsfile.c,v 1.19 2015/03/01 17:04:50 tom Exp $
+ * $Id: rcsfile.c,v 1.20 2024/04/19 20:37:36 tom Exp $
  */
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -992,7 +992,7 @@ makepatch(struct revnode *revp) {
 }
 
 static struct rcspatch *
-patch_create() {
+patch_create(void) {
 	struct rcspatch *pp;
 
 	pp = malloc(sizeof(*pp));

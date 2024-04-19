@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: rcshist.c,v 1.13 2015/03/01 14:26:14 tom Exp $
+ * $Id: rcshist.c,v 1.14 2024/04/19 20:38:14 tom Exp $
  */
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -49,7 +49,7 @@ char *progname;
 int mflag;
 
 void
-usage() {
+usage(void) {
 	fprintf(stderr,
 	    "Usage: %s [-mR] [-r<branch|MAIN|ALL>] <filename> ...\n"
 	    "       %s -L<revision> <filename>\n",
