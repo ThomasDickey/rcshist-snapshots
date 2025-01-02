@@ -9,7 +9,7 @@
 .\"    notice, this list of conditions and the following disclaimer
 .\"    in this position and unchanged.
 .\" 2. The name of the author may not be used to endorse or promote products
-.\"    derived from this software withough specific prior written permission
+.\"    derived from this software without specific prior written permission
 .\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -22,112 +22,103 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $Id: rcshist.1,v 1.2 2005/02/08 00:27:01 iedowse Exp $
+.\" $Id: rcshist.1,v 1.4 2025/01/01 23:03:27 tom Exp $
 .\"
-.Dd February 8, 2005
-.Dt RCSHIST 1
-.Os
-.Sh NAME
-.Nm rcshist
-.Nd display RCS change history
-.Sh SYNOPSIS
-.Nm
-.Op Fl mR
-.Op Fl r Ar branch|MAIN|ALL
-.Ar
-.Nm
-.Ar -L revision rcsfile
-.Sh DESCRIPTION
-The
-.Nm
-utility displays the complete revision history of a set of RCS files
+.TH RCSHIST 1 2025-01-01 "" "User commands"
+.ds Nm rcshist
+.SH NAME
+rcshist \-
+display RCS change history
+.SH SYNOPSIS
+\fB\*(Nm \fI[\fB-mR\fI] [\fB-r\fI branch|\fBMAIN\fI|\fBALL\fI] file ...\fP
+.br
+\fB\*(Nm -L \fIrevision\fR \fIrcsfile\fR
+.SH DESCRIPTION
+The \*(Nm utility displays the complete revision history of a set of RCS files
 including log messages and patches.
-The output is sorted in reverse date order over all revisions of all
-files.
-.Pp
+The output is sorted in reverse date order over all revisions of all files.
+.PP
 The second form displays the patch associated with a particular
 revision of an RCS file.
 In this case, the revision must be specified numerically and
-.Ar rcsfile
+.I rcsfile
 must be an RCS
-.Li ,v
+.B ,v
 file.
-.Pp
+.PP
 The options are as follows:
-.Bl -tag -width Fl
-.It Fl m
+.IP \fB\-m\fR
 Reduce memory usage by retaining only a small fraction of revisions in
 memory.
 Normally,
-.Nm
+\*(Nm
 will cache all revisions of all files, since this reduces computation
 time significantly.
-For very large file sets, this behaviour can cause excessive memory
-usage.
-.It Fl R
-Recursively search all paths specified for files to analyse.
-.It Fl r Ar branch|MAIN|ALL
+For very large file sets, this behavior can cause excessive memory usage.
+.IP \fB\-R\fR
+Recursively search all paths specified for files to analyze.
+.IP "\fB\-r\fR \fIbranch|MAIN|ALL\fR"
 Restrict output to revisions on the specified symbolic branch tag.
 Two special branch names are supported:
-.Bl -tag -width 8n
-.It MAIN
+.RS
+.IP MAIN
 Only revisions on the main trunk branch are displayed.
-.It ALL
+.IP ALL
 All revisions are displayed regardless of their branch.
-This is the default if
-.Nm
-cannot infer a branch tag from a CVS/Tag file.
-.El
-.El
-.Pp
+This is the default if \*(Nm cannot infer a branch tag from a CVS/Tag file.
+.RE
+.PP
 Each
-.Ar file
+.I file
 listed on the command line specifies an RCS file to be examined.
 The filename is interpreted as follows:
-.Pp
+.PP
 If the file has a
-.Li ,v
+.B ,v
 suffix,
-.Nm
-considers it as an RCS format file and opens it directly. 
-.Pp
+\*(Nm considers it as an RCS format file and opens it directly.
+.PP
 If the file has no
-.Li ,v
+.B ,v
 suffix,
-.Nm
-searches for a CVS directory in the same directory as the file.
+\*(Nm searches for a CVS directory in the same directory as the file.
 If this exists,
-.Nm
+\*(Nm
 attempts to find the RCS file based on the contents of the
 CVS/Root and CVS/Repository files.
 If a CVS/Tag file exists, and if no branch tag has been specified
 on the command-line or inferred from elsewhere, then
-.Nm
+\*(Nm
 uses the branch tag from CVS/Tag as the default branch to
 display.
-.Pp
-Finally, the file has no
-.Li ,v
+.PP
+Finally, if the file has no
+.B ,v
 suffix and no CVS directory was found,
-.Nm
+\*(Nm
 searches for an RCS directory in the same directory as the file.
 If this exists,
-.Nm
+\*(Nm
 will look for an RCS
-.Li ,v
+.B ,v
 file corresponding to the specified file.
-.Pp
-If
-.Nm
-fails to locate an RCS file corresponding to a specified command-line
-filename,
-.Nm
+.PP
+If \*(Nm fails to locate an RCS file
+corresponding to a specified command-line filename,
+\*(Nm
 will simply print a warning message and continue.
-.Sh SEE ALSO
-.Xr cvs 1 ,
-.Xr rcs 1 ,
-.Xr rlog 1 ,
-.Xr rcsdiff 1 ,
-.Xr rcsfile 5 ,
-.Sh AUTHORS
-.An Ian Dowse Aq iedowse@FreeBSD.org
+.SH ENVIRONMENT
+.IP RCS_DIR
+if defined, specifies the directory in which RCS archive files are found.
+Normally files are found in "./RCS".
+.SH AUTHORS
+Ian Dowse <iedowse@FreeBSD.org>
+.br
+Thomas E. Dickey <dickey@invisible-island.net>
+.SH SEE ALSO
+.BR checkout (1),
+.BR cvs (1),
+.BR rcs (1),
+.BR rcsdiff (1),
+.BR rcsfile (5),
+.BR rlog (1)

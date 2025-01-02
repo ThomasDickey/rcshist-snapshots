@@ -22,17 +22,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: rcshist.c,v 1.14 2024/04/19 20:38:14 tom Exp $
+ * $Id: rcshist.c,v 1.17 2025/01/01 23:44:15 tom Exp $
  */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <err.h>
 #include <fts.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
+#include "rcshist.h"
 #include "namedobjlist.h"
 #include "rcsfile.h"
 #include "misc.h"
@@ -43,12 +41,19 @@ void prrev(struct revnode *revp);
 void prlist(const char *prefix, struct textlist *tlp);
 void prlog(struct revnode *revp);
 void onerev(char *filename, char *revame);
-void usage(void);
 
 char *progname;
 int mflag;
 
 void
+give_up(const char *fn, int ln)
+{
+	fflush(stdout);
+	fprintf(stderr, "%s: fatal error at %s line %d\n", progname, fn, ln);
+	exit(EXIT_FAILURE);
+}
+
+static void
 usage(void) {
 	fprintf(stderr,
 	    "Usage: %s [-mR] [-r<branch|MAIN|ALL>] <filename> ...\n"
@@ -123,7 +128,7 @@ main(int argc, char **argv) {
 			    argv[2]);
 			continue;
 		}
-		
+
 		for (rpp = rltmp; *rpp != NULL; rpp++) {
 			if (rnum == rlist_len) {
 				rlist_len += rlist_len + 1;
@@ -150,7 +155,7 @@ main(int argc, char **argv) {
 void
 prrev(struct revnode *revp) {
 
-	printf("REV:%-20.*s%-20.*s%d/%02d/%02d %02d:%02d:%02d       %.*s\n",
+	printf("REV:%-20.*s%-20.*s %d/%02d/%02d %02d:%02d:%02d       %.*s\n",
 	    revp->revtext.len, revp->revtext.start,
 	    revp->rcsp->shortfname.len, revp->rcsp->shortfname.start,
 	    revp->date.num[0], revp->date.num[1], revp->date.num[2],
@@ -199,7 +204,7 @@ prlist(const char *prefix, struct textlist *tlp) {
 
 	if (tlp->len == 0)
 		return;
-	
+
 	TEXTLIST_FOREACH(tlp, textp) {
 		if (len == 0 || len + textp->len > 75) {
 			if (len == 0)

@@ -1,9 +1,10 @@
 Upstream source http://dickey.his.com/rcshist/rcshist.html
 
-Packaged by: Thomas Dickey <dickey@invisible-island.net>
+Packaged by: Thomas E. Dickey <dickey@invisible-island.net>
 
 -------------------------------------------------------------------------------
 .\" Copyright (c) 2001 Ian Dowse <iedowse@maths.tcd.ie>
+.\" Copyright (c) 2025 Thomas E. Dickey <dickey@invisible-island.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +30,7 @@ Packaged by: Thomas Dickey <dickey@invisible-island.net>
 
 Files: aclocal.m4
 Licence: other-BSD
-Copyright:  2015-2023,2024 by Thomas E. Dickey
+Copyright:  2015-2024,2025 by Thomas E. Dickey
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
     are met:
@@ -86,7 +87,7 @@ Licence: other-BSD
     shared with many OS's install programs.
 
 Files: debian/*
-Copyright:  2015-2023,2024 Thomas E. Dickey
+Copyright:  2015-2024,2025 Thomas E. Dickey
 Licence: other-BSD
     Permission to use, copy, modify, and distribute this software and its
     documentation for any purpose and without fee is hereby granted,

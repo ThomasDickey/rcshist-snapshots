@@ -22,11 +22,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: namedobjlist.c,v 1.7 2024/04/19 20:39:31 tom Exp $
+ * $Id: namedobjlist.c,v 1.9 2025/01/01 23:43:38 tom Exp $
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
+#include "rcshist.h"
 #include "namedobjlist.h"
 
 static int nol_hash(Namedobjlist *self, const void *str, int my_len);
@@ -62,12 +61,12 @@ nol_rehash(Namedobjlist *self, int log2hs) {
 
 	TAILQ_FOREACH(itemp, &self->all, all) {
 		struct nol_hashhead *hash;
-	
+
 		hash = &self->hash[nol_hash(self, itemp->name, itemp->namelen)];
 		TAILQ_INSERT_TAIL(hash, itemp, hash);
 	}
 }
-	
+
 Namedobjlist *
 namedobjlist_create(void) {
 	Namedobjlist *nol = malloc(sizeof(*nol));
@@ -76,7 +75,7 @@ namedobjlist_create(void) {
 	nol->nitems = 0;
 	nol->hash = NULL;
 	nol_rehash(nol, 2);
-	
+
 	return nol;
 }
 
@@ -88,7 +87,7 @@ namedobjlist_destroy(Namedobjlist *self) {
 		 * is no way we can figure out how to destroy them.
 		 */
 		fprintf(stderr, "namedobjlist_destroy: list not empty\n");
-		abort();
+		GIVE_UP();
 	}
 	if (self->hash != NULL)
 		free(self->hash);
@@ -138,7 +137,7 @@ namedobjlist_additem(Namedobjlist *self, const void *name, int namelen,
 	if (namedobjlist_find(self, name, namelen) != NULL) {
 		fprintf(stderr, "namedobjlist_additem: '%.*s' exists!\n",
 		    namelen, (const char *)name); /* XXX strvisx this */
-		abort();
+		GIVE_UP();
 	}
 
 	itemp = malloc(sizeof(*itemp));
@@ -179,10 +178,10 @@ namedobjlist_removeitem(Namedobjlist *self, const void *name, int namelen) {
 Namedobjlist_iter *
 nol_iter_create(Namedobjlist *nol) {
 	Namedobjlist_iter *self = malloc(sizeof(*self));
-	
+
 	self->nol = nol;
 	self->nextitem = TAILQ_FIRST(&nol->all);
-	
+
 	return self;
 }
 

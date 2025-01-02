@@ -22,12 +22,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: strbuf.c,v 1.6 2024/04/19 20:37:54 tom Exp $
+ * $Id: strbuf.c,v 1.8 2025/01/01 23:44:28 tom Exp $
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
+
+#include "rcshist.h"
 #include "strbuf.h"
 
 /* Code for handling variable length strings.
@@ -78,7 +77,7 @@ char *sb_detach(struct strbuf *sb) {
 
 	/*
 	 * If the string length is 0 we just return a strdup'd ""  and
-	 * leave everything else intact. 
+	 * leave everything else intact.
 	 */
 	if (sb->pos == 0)
 		return strdup("");
@@ -92,7 +91,7 @@ char *sb_detach(struct strbuf *sb) {
 }
 
 /* Extend the buffer in sb to be at least len bytes */
-static void 
+static void
 sb_pullupto(struct strbuf *sb, int len) {
 	if (len <= sb->buflen)
 		return;
@@ -141,7 +140,7 @@ void sb_move(struct strbuf *src, struct strbuf *dest) {
 /* Truncate the string to len characters */
 void sb_truncate(struct strbuf *sb, int len) {
 	if (len < 0 || len > sb->pos)
-		abort();
+		GIVE_UP();
 	sb->pos = len;
 	if (sb->buf)
 		sb->buf[sb->pos] = '\0';
@@ -171,7 +170,7 @@ int sb_getline(FILE *fp, Strbuf *sb) {
 	return cnt;
 }
 
-/* 
+/*
  * sb_{v,}{print,append}f functions. Write (or append) to a Strbuf
  * using printf-style format + arg lists.
  */
@@ -199,7 +198,7 @@ int sb_printf(Strbuf *buf, const char *fmt, ...) {
 
 	return retval;
 }
-	
+
 int sb_appendf(Strbuf *buf, const char *fmt, ...) {
 	va_list ap;
 	int retval;
@@ -215,7 +214,7 @@ int sb_vprintf(Strbuf *buf, const char *fmt, va_list args) {
 	sb_reset(buf);
 	return sb_vappendf(buf, fmt, args);
 }
-	
+
 /* #define PRINTF_CHECKUP */
 int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 
@@ -241,9 +240,9 @@ int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 	va_copy(ap, args);
 	if (fmt == NULL) {
 		fprintf(stderr, "sb_vappendf: NULL format arg!\n");
-		abort();
+		GIVE_UP();
 	}
-	
+
 	if (buf == NULL) {
 		Strbuf *tmpbuf2;
 		fprintf(stderr, "sb_vappendf: NULL buf arg!\n");
@@ -253,7 +252,7 @@ int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 			fprintf(stderr, "Output was '%s'\n", sb_ptr(tmpbuf2));
 			sb_free(tmpbuf2);
 		}
-		abort();
+		GIVE_UP();
 	}
 
 	oldlen = sb_len(buf);
@@ -315,7 +314,7 @@ int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 					prec = 10 * prec + ch2digit(*fmt);
 		}
 
-		for (;; fmt++) {	
+		for (;; fmt++) {
 			switch (*fmt) {
 			case 'h':
 				flags |= FLG_SHORT;
@@ -347,7 +346,7 @@ int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 			else
 				flen = (int)strlen(fieldp);
 			break;
-		
+
 		case 'p':
 			flags |= FLG_HEX;
 			/* FALLTHRU */
@@ -355,14 +354,14 @@ int sb_vappendf(Strbuf *buf, const char *fmt, va_list args) {
 		case 'X':
 			base = 16;
 			goto unum;
-			
+
 		case 'd':
 		case 'i':
 			if (flags & FLG_LONG)
 				ul_arg = va_arg(ap, unsigned long);
 			else if (flags & FLG_SHORT)
 				ul_arg = (unsigned long)(short)va_arg(ap, int);
-			else 
+			else
 				ul_arg = (unsigned long)va_arg(ap, int);
 			if ((long)ul_arg < 0) {
 				sign = '-';
@@ -390,7 +389,7 @@ donum:
 			flags |= FLG_NUM;
 			switch (base) {
 			case 8:
-				do {	
+				do {
 					*--fieldp = (char)digit2ch(ul_arg & 7);
 					ul_arg = ul_arg >> 3;
 				} while(ul_arg);
@@ -408,7 +407,7 @@ donum:
 					flags |= FLG_HEX;
 				i = (*fmt == 'p' ? 'x' : *fmt) - 'X' + 'A' - 10;
 				do {
-					*--fieldp = (char)(((ul_arg & 15) < 10) ? 
+					*--fieldp = (char)(((ul_arg & 15) < 10) ?
 					    digit2ch(ul_arg & 15) :
 					    ((ul_arg & 15) + (unsigned long)i));
 					ul_arg = ul_arg >> 4;
@@ -425,7 +424,7 @@ donum:
 			/* Not standard behaviour, but we want to know when
 			 * this happens */
 			fprintf(stdout, "Unknown format char '%c'\n", *fmt);
-			abort();
+			GIVE_UP();
 		}
 		if (flen == -1)
 			flen = (int)(tmpbuf + FBUF_LEN - fieldp);
@@ -466,10 +465,10 @@ donum:
 	    strcmp(sb_ptr(buf) + oldlen, p)) {
 		fprintf(stdout, "PRINTF_CHECKUP: '%s' should be '%s'\n",
 		    sb_ptr(buf) + oldlen, p);
-		abort();
+		GIVE_UP();
 	}
 	free(p);
 #endif
-	
+
 	return sb_len(buf) - oldlen;
 }

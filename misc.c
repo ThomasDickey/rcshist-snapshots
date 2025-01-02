@@ -22,11 +22,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <err.h>
 
+#include "rcshist.h"
 #include "misc.h"
 
 struct textlist *
@@ -104,7 +103,7 @@ numextend(struct rcsnum *p, int len) {
 void
 numfree(struct rcsnum *p) {
 	free(p->num);
-	p->num = 0;
+	p->num = NULL;
 }
 
 void
@@ -114,7 +113,7 @@ text2num(struct rcstext *textp, struct rcsnum *nump) {
 
 	if (nump->num != NULL) {
 		printf("text2num: non-NULL num ptr\n");
-		abort();
+		GIVE_UP();
 	}
 
 	i = 0;
@@ -127,7 +126,7 @@ text2num(struct rcstext *textp, struct rcsnum *nump) {
 
 	nump->len = i + 1;
 	nump->num = malloc((size_t)RCSNUM_BYTES(nump));
-	
+
 	p = textp->start;
 	for (i = 0; i < nump->len; i++) {
 		int n;
@@ -135,9 +134,9 @@ text2num(struct rcstext *textp, struct rcsnum *nump) {
 		if (*p < '0' || *p > '9') {
 			printf("text2num: parse failed '%.*s'\n",
 			    textp->len, textp->start);
-			abort();
+			GIVE_UP();
 		}
-	
+
 		n = 0;
 		while (p < endp && *p >= '0' && *p <= '9')
 			n = (n * 10) + (*p++ - '0');
@@ -145,7 +144,7 @@ text2num(struct rcstext *textp, struct rcsnum *nump) {
 		if (p < endp && *p++ != '.') {
 			printf("text2num: parse failed '%.*s'\n",
 			    textp->len, textp->start);
-			abort();
+			GIVE_UP();
 		}
 
 		nump->num[i] = n;
@@ -157,7 +156,7 @@ textprint(struct rcstext *textp) {
 	const char *p1;
 	const char *p = textp->start;
 	const char *end = textp->start + textp->len;
-	
+
 	while (p < end && (p1 = memchr(p, '@', (size_t)(end - p))) != NULL) {
 		fwrite(p, (size_t)(p1 - p + 1), 1, stdout);
 		p = p1 + 2;

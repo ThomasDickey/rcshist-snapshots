@@ -1,3 +1,43 @@
+2025-01-01  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* package/debian/copyright, COPYING: bump
+
+	* rcshist.h: RCS_BASE
+
+	* strbuf.c, rcshist.c, rcsfile.c, namedobjlist.c, misc.c:
+	aborting on a fatal error is unfriendly - tell the user where it died,
+	and allow stdout to be flushed, first
+
+	* rcshist.c:
+	ensure a space between filename and date in the "REV:" lines (report by
+	Manfred Schwarb)
+
+	* rcshist.1: document $RCS_DIR
+
+	* rcshist.1: convert from mdoc to man, for portability
+
+	* rcsfile.c:
+	support $RCS_DIR for compatibility with cm_tools utilities.
+
+	* rcshist.c, misc.c, strbuf.c, namedobjlist.c, namedobjlist.h, rcsfile.c:
+	gcc15-warnings
+
+	* configure: regen
+
+	* configure.in: put --with-systype up front
+
+	* aclocal.m4: resync with my-autoconf
+
+	* package/rcshist.spec, package/debian/changelog: bump
+
+2024-07-28  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* config.guess: 2024-07-27
+
+2024-06-03  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* config.sub: 2024-05-27
+
 2024-04-19  Thomas E. Dickey  <dickey@invisible-island.net>
 
 	* package/debian/changelog, package/rcshist.spec: bump

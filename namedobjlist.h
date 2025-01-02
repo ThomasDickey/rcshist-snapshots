@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: namedobjlist.h,v 1.5 2018/03/25 22:44:22 tom Exp $
+ * $Id: namedobjlist.h,v 1.6 2025/01/01 20:29:42 tom Exp $
  */
 #ifndef NAMEDOBJLIST_H
 #define NAMEDOBJLIST_H
@@ -52,7 +52,7 @@ struct namedobjlist_iterator {
 	Namedobjlist *nol;
 	struct namedobjlist_item *nextitem;
 };
-	
+
 Namedobjlist *namedobjlist_create(void);
 void namedobjlist_destroy(Namedobjlist *self);
 void *namedobjlist_lookup(Namedobjlist *self, const void *name, int namelen);

@@ -22,18 +22,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: rcsfile.c,v 1.20 2024/04/19 20:37:36 tom Exp $
+ * $Id: rcsfile.c,v 1.23 2025/01/01 23:43:48 tom Exp $
  */
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/mman.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <err.h>
 
+#include "rcshist.h"
 #include "rcsfile.h"
 #include "strbuf.h"
 
@@ -53,7 +51,7 @@ static int id_lookup(struct rcstext *id);
 static int optional_tok(struct parser *pp, struct token *tokp, int type);
 static void expect_tok(struct parser *pp, struct token *tokp, int type);
 static void puttok(struct parser *pp, struct token *tokp);
-static int gettok(struct parser *pp, struct token *tokp); 
+static int gettok(struct parser *pp, struct token *tokp);
 
 static const char *tokname[] = {"NONE", "NUM", "ID", "STRING", "COLON", "SEMI"};
 
@@ -96,7 +94,7 @@ rcsfile_open(const char *filename) {
 		close(fd);
 		return NULL;
 	}
-		
+
 	if ((map = mmap(NULL, (size_t)sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) ==
 	    MAP_FAILED) {
 		warn("%s: mmap", filename);
@@ -107,7 +105,7 @@ rcsfile_open(const char *filename) {
 	close(fd);
 
 	pp.pos = map;
-	pp.end = map + sb.st_size;	
+	pp.end = map + sb.st_size;
 	pp.saved.type = TOKTYPE_NONE;
 
 	rcsp = calloc(1, sizeof(*rcsp));
@@ -257,7 +255,7 @@ rcsfile_smartopen(const char *filename, char **branchp) {
 			p = sb_ptr(buf);
 		sb_printf(rcsdir, "%s/", p);
 		fclose(fp);
-		
+
 		sb_printf(ftmp, "%sCVS/Repository", sb_ptr(dirname));
 		if ((fp = fopen(sb_ptr(ftmp), "r")) == NULL)
 			err(1, "%s", sb_ptr(ftmp));
@@ -275,8 +273,13 @@ rcsfile_smartopen(const char *filename, char **branchp) {
 			fclose(fp);
 		} else if (branchp != NULL && *branchp == NULL)
 			*branchp = strdup("MAIN");
-	} else
-		sb_printf(rcsdir, "%sRCS/", sb_ptr(dirname));
+	} else {
+		const char *rcs_dirname = getenv("RCS_DIR");
+		if (rcs_dirname == NULL) {
+			rcs_dirname = "RCS";
+		}
+		sb_printf(rcsdir, "%s%s/", sb_ptr(dirname), rcs_dirname);
+	}
 
 	sb_printf(ftmp, "%s%s,v", sb_ptr(rcsdir), sb_ptr(base_name));
 	if ((fp = fopen(sb_ptr(ftmp), "r")) != NULL)
@@ -337,10 +340,10 @@ get_admin(struct parser *pp, struct rcsfile *rcsp) {
 			while (optional_tok(pp, &tok, TOKTYPE_ID)) {
 				struct rcsnum *nump;
 				struct rcstext symbol = tok.value;
-			
+
 				expect_tok(pp, &tok, TOKTYPE_COLON);
 				expect_tok(pp, &tok, TOKTYPE_NUM);
-#if 0			
+#if 0
 				printf("symbol: '%.*s' -> '%.*s'\n",
 				    symbol.len, symbol.start,
 				    tok.value.len, tok.value.start);
@@ -643,7 +646,7 @@ fixup_deltas(struct rcsfile *rcsp) {
 		found = 0;
 		TEXTLIST_FOREACH(revp->branchrevs, textp) {
 			struct rcsnum brnum;
-	
+
 			numinit(&brnum);
 			text2num(textp, &brnum);
 			if (brnum.len == num.len +1 && bcmp(brnum.num,
@@ -708,11 +711,11 @@ revlist(struct rcsfile *rcsp, char *branch) {
 
 	while (revp != NULL) {
 		if (i == rcsp->nrevs)
-			abort();
+			GIVE_UP();
 		list[i++] = revp;
 		revp = revp->prev;
 	}
-	
+
 	return list;
 }
 
@@ -820,7 +823,7 @@ rev_diff(struct revnode *revp, int ctx, int reverse) {
 		cstart = opp->line + coff;
 		chunkend = opp->line + opp->len;
 		ocount = chunkend - cstart;
-		
+
 		for (copp = opp + 1; copp < &pp->op[pp->len]; copp++) {
 			if (copp->op == RPOP_ADD || copp->op == RPOP_DEL ||
 			    copp->len <= ctx || (copp - pp->op < pp->len - 1 &&
@@ -856,7 +859,7 @@ rev_addref(struct revnode *revp) {
 void
 rev_remref(struct revnode *revp) {
 	if (--revp->olrefs < 0)
-		abort();
+		GIVE_UP();
 	if (!(revp->rcsp->flags & RCSFILE_LOWMEM) || revp->olrefs != 0)
 		return;
 	if (revp->outputlines == NULL || revp->prev == NULL)
@@ -947,7 +950,7 @@ makepatch(struct revnode *revp) {
 		op = *p++;
 		arg1 = (int)strtoul(p, &q, 10) - 1;
 		arg2 = (int)strtoul(q, &q, 10);
-		
+
 		/* Convert 'insert-after' semantics to 'insert-before' */
 		if (op == 'a' && oline <= arg1)
 			arg1++;
@@ -957,10 +960,10 @@ makepatch(struct revnode *revp) {
 			    &plist->list[oline]);
 			nline += arg1 - oline;
 			oline += arg1 - oline;
-			
+
 			if (oline > plist->len || textp >
 			    &revp->textlines->list[revp->textlines->len])
-				abort();
+				GIVE_UP();
 		}
 
 		/* Always start a patch with a RPOP_COPY section */
@@ -973,7 +976,7 @@ makepatch(struct revnode *revp) {
 			    &plist->list[arg1]);
 			oline += arg2;
 			if (oline > plist->len)
-				abort();
+				GIVE_UP();
 			break;
 		case 'a':
 			patch_add(pp, RPOP_ADD, arg1, nline, arg2, textp + 1);
@@ -981,7 +984,7 @@ makepatch(struct revnode *revp) {
 			nline += arg2;
 			if (oline > plist->len || textp >
 			    &revp->textlines->list[revp->textlines->len])
-				abort();
+				GIVE_UP();
 			break;
 		}
 	}
@@ -1116,11 +1119,11 @@ expect_tok(struct parser *pp, struct token *tokp, int type) {
 		errx(1, "expect_tok(%s): got %s['%.*s']", tokname[type],
 		    tokname[tokp->type], tokp->value.len, tokp->value.start);
 }
-	
+
 void
 puttok(struct parser *pp, struct token *tokp) {
 	if (pp->saved.type != TOKTYPE_NONE)
-		abort();
+		GIVE_UP();
 	pp->saved = *tokp;
 }
 
@@ -1169,7 +1172,7 @@ gettok(struct parser *pp, struct token *tokp) {
 			tokp->type = TOKTYPE_COLON;
 			p++;
 			goto done;
-			
+
 		case ';':
 			tokp->value.start = NULL;
 			tokp->type = TOKTYPE_SEMI;
@@ -1202,7 +1205,7 @@ gettok(struct parser *pp, struct token *tokp) {
 		}
 		goto done;
 	}
-		
+
 done:
 	pp->pos = p;
 	return (tokp->type != TOKTYPE_NONE);
