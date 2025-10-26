@@ -1,4 +1,4 @@
-dnl $Id: aclocal.m4,v 1.9 2025/01/01 20:09:22 tom Exp $
+dnl $Id: aclocal.m4,v 1.11 2025/10/26 14:09:49 tom Exp $
 dnl Macros for rcshist configure script (Thomas E. Dickey)
 dnl ---------------------------------------------------------------------------
 dnl Copyright 2015-2023,2025 Thomas E. Dickey
@@ -10,7 +10,7 @@ dnl 1. Redistributions of source code must retain the above copyright
 dnl    notice, this list of conditions and the following disclaimer
 dnl    in this position and unchanged.
 dnl 2. The name of the author may not be used to endorse or promote products
-dnl    derived from this software withough specific prior written permission
+dnl    derived from this software without specific prior written permission
 dnl
 dnl THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 dnl IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -180,7 +180,7 @@ dnl Allow user to enable a normally-off option.
 AC_DEFUN([CF_ARG_ENABLE],
 [CF_ARG_OPTION($1,[$2],[$3],[$4],no)])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ARG_OPTION version: 5 updated: 2015/05/10 19:52:14
+dnl CF_ARG_OPTION version: 6 updated: 2025/08/05 04:09:09
 dnl -------------
 dnl Restricted form of AC_ARG_ENABLE that ensures user doesn't give bogus
 dnl values.
@@ -189,7 +189,7 @@ dnl Parameters:
 dnl $1 = option name
 dnl $2 = help-string
 dnl $3 = action to perform if option is not default
-dnl $4 = action if perform if option is default
+dnl $4 = action to perform if option is default
 dnl $5 = default option value (either 'yes' or 'no')
 AC_DEFUN([CF_ARG_OPTION],
 [AC_ARG_ENABLE([$1],[$2],[test "$enableval" != ifelse([$5],no,yes,no) && enableval=ifelse([$5],no,no,yes)
@@ -1605,7 +1605,7 @@ fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 68 updated: 2024/11/09 18:07:29
+dnl CF_XOPEN_SOURCE version: 70 updated: 2025/10/21 16:27:38
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -1665,7 +1665,7 @@ case "$host_os" in
 	cf_xopen_source="-D_SGI_SOURCE"
 	cf_XOPEN_SOURCE=
 	;;
-(linux*gnu|linux*gnuabi64|linux*gnuabin32|linux*gnueabi|linux*gnueabihf|linux*gnux32|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin|msys|mingw*|linux*uclibc)
+(linux*gnu*|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin|msys|mingw*|linux*uclibc)
 	CF_GNU_SOURCE($cf_XOPEN_SOURCE)
 	;;
 linux*musl)

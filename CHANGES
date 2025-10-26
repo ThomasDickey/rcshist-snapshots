@@ -1,3 +1,35 @@
+2025-10-26  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* package/debian/rules: lintian fixes
+
+	* package/rcshist.spec: rpmlint fixes
+
+	* package/debian/control: lintian fixes
+
+	* package/debian/control: fix copy/paste
+
+	* package/debian/copyright: fix formatting
+
+	* COPYING, aclocal.m4, misc.c, misc.h, namedobjlist.c, namedobjlist.h,
+	  rcsfile.c, rcsfile.h, rcshist.c, rcshist.h, strbuf.c, strbuf.h:
+	spelling
+
+	* package/debian/changelog, package/rcshist.spec: bump
+
+2025-10-21  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* configure: regen
+
+	* aclocal.m4: resync with my-autoconf
+
+2025-07-09  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* config.guess, config.sub: 2025-07-10
+
+2025-06-08  Thomas E. Dickey  <dickey@invisible-island.net>
+
+	* install-sh: fix license
+
 2025-01-01  Thomas E. Dickey  <dickey@invisible-island.net>
 
 	* package/debian/copyright, COPYING: bump

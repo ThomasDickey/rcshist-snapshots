@@ -9,7 +9,7 @@
  *    notice, this list of conditions and the following disclaimer
  *    in this position and unchanged.
  * 2. The name of the author may not be used to endorse or promote products
- *    derived from this software withough specific prior written permission
+ *    derived from this software without specific prior written permission
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: strbuf.h,v 1.1 2001/05/20 14:51:33 iedowse Exp $
+ * $Id: strbuf.h,v 1.2 2025/10/26 14:09:49 tom Exp $
  */
 #ifndef STRBUF_H
 #define STRBUF_H

@@ -1,14 +1,14 @@
 Summary: Display RCS change history
 %define AppProgram rcshist
 %define AppVersion 1.04
-%define AppRelease 20250101
-# $Id: rcshist.spec,v 1.9 2025/01/01 20:06:38 tom Exp $
+%define AppRelease 20251026
+# $Id: rcshist.spec,v 1.11 2025/10/26 14:36:52 tom Exp $
 Name: %{AppProgram}
 Version: %{AppVersion}
 Release: %{AppRelease}
-License: BSD
+License: BSD-Source-Code
 Group: Applications/Development
-URL: ftp://ftp.invisible-island.net/%{AppProgram}
+URL: https://invisible-island.net/%{AppProgram}
 Source0: %{AppProgram}-%{AppVersion}-%{AppRelease}.tgz
 Packager: Thomas Dickey <dickey@invisible-island.net>
 
@@ -52,6 +52,9 @@ strip $RPM_BUILD_ROOT%{_bindir}/%{AppProgram}
 
 %changelog
 # each patch should add its ChangeLog entries here
+
+* Sun Oct 26 2025 Thomas E. Dickey
+- testing rcshist 1.04-20251026
 
 * Sun Jan 06 2019 Thomas Dickey
 - use "hardening" flags.
